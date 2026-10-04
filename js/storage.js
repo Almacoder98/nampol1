@@ -10,11 +10,26 @@ import {
 export async function uploadFile(file, path) {
     try {
         const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, file);
+        const snapshot = await uploadBytes(storageRef, file, {
+            contentType: file.type
+        });
         const downloadURL = await getDownloadURL(snapshot.ref);
-        return { success: true, url: downloadURL, path: path };
+        return { success: true, url: downloadURL, path };
     } catch (error) {
         console.error("Upload error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function uploadPrivateFile(file, path) {
+    try {
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, file, {
+            contentType: file.type
+        });
+        return { success: true, path };
+    } catch (error) {
+        console.error("Private upload error:", error);
         return { success: false, error: error.message };
     }
 }

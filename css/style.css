@@ -1189,3 +1189,111 @@ footer .small {
         display: none;
     }
 }
+/* ============================================================
+   21. FORM VISIBILITY FIX
+   Makes application fields, dropdowns and checkboxes clear
+   ============================================================ */
+
+/* Text inputs */
+.form-control {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+    border: 2px solid #6c757d !important;
+    opacity: 1 !important;
+}
+
+/* Bootstrap select boxes */
+.form-select {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+    border: 2px solid #6c757d !important;
+    opacity: 1 !important;
+    min-height: 48px;
+}
+
+/* Select elements using form-control */
+select.form-control {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+    border: 2px solid #6c757d !important;
+    opacity: 1 !important;
+    cursor: pointer;
+}
+
+/* Dropdown options */
+.form-select option,
+select.form-control option {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+}
+
+/* Focus effect */
+.form-control:focus,
+.form-select:focus,
+select.form-control:focus {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+    border-color: #e94560 !important;
+    box-shadow: 0 0 0 0.2rem rgba(233, 69, 96, 0.25) !important;
+    outline: none;
+}
+
+/* Labels */
+.form-label {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* Make checkboxes clearly visible */
+.form-check-input {
+    width: 22px !important;
+    height: 22px !important;
+    background-color: #ffffff !important;
+    border: 2px solid #343a40 !important;
+    opacity: 1 !important;
+    cursor: pointer;
+}
+
+/* Checked checkbox */
+.form-check-input:checked {
+    background-color: #e94560 !important;
+    border-color: #e94560 !important;
+}
+
+/* Checkbox focus */
+.form-check-input:focus {
+    border-color: #e94560 !important;
+    box-shadow: 0 0 0 0.2rem rgba(233, 69, 96, 0.25) !important;
+}
+
+/* Checkbox text */
+.form-check-label {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    font-weight: 500;
+}
+
+/* Disabled/read-only fields should still be readable */
+.form-control:disabled,
+.form-control[readonly],
+.form-select:disabled {
+    background-color: #e9ecef !important;
+    color: #495057 !important;
+    opacity: 1 !important;
+    border: 2px solid #adb5bd !important;
+}
+
+/* Date fields */
+input[type="date"],
+input[type="number"] {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+    border: 2px solid #6c757d !important;
+    opacity: 1 !important;
+}
+
+/* Make date picker icon visible */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    cursor: pointer;
+}

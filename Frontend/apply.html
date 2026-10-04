@@ -3,423 +3,993 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Form - NamPol Recruitment</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>New Application | NamPol Recruitment</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="../css/style.css">
+
     <style>
         body {
             background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
             min-height: 100vh;
             color: white;
-            padding-top: 80px;
         }
-        
-        .form-container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 800px;
-            margin: 20px auto;
-            border: 1px solid rgba(255,255,255,0.2);
+
+        .application-container {
+            max-width: 950px;
+            margin: 40px auto;
         }
-        
-        .form-control {
-            background: rgba(255,255,255,0.9);
+
+        .application-card {
+            background: white;
+            color: #212529;
             border: none;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 20px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.30);
         }
-        
-        .form-label {
-            font-weight: 500;
-        }
-        
-        .btn-submit {
-            background: #e94560;
+
+        .application-header {
+            background: #0b3b6f;
             color: white;
-            width: 100%;
-            padding: 12px;
-            border-radius: 30px;
-            border: none;
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        
-        .btn-submit:hover {
-            background: #c73e54;
-        }
-        
-        .upload-area {
-            border: 2px dashed rgba(255,255,255,0.5);
-            border-radius: 10px;
             padding: 30px;
-            text-align: center;
-            margin-bottom: 20px;
-            background: rgba(255,255,255,0.05);
         }
-        
-        .upload-area:hover {
-            border-color: #e94560;
-            background: rgba(233,69,96,0.1);
-        }
-        
+
         .section-title {
+            color: #0b3b6f;
             border-bottom: 2px solid #e94560;
             padding-bottom: 10px;
-            margin-bottom: 20px;
             margin-top: 30px;
-            color: #e94560;
+            margin-bottom: 20px;
         }
-        
-        .navbar {
-            background: rgba(0,0,0,0.8) !important;
+
+        .readonly-field {
+            background-color: #e9ecef !important;
         }
-        
-        .navbar-brand {
+
+        .requirement-box {
+            background: #f8f9fa;
+            border-left: 4px solid #0b3b6f;
+            padding: 18px;
+            border-radius: 8px;
+        }
+
+        #loadingScreen {
+            min-height: 100vh;
+        }
+
+        .btn-submit {
+            background: #e94560;
+            border: none;
+            color: white;
             font-weight: bold;
+            padding: 13px;
         }
-        
-        .nav-link {
-            color: white !important;
-            margin-left: 15px;
-        }
-        
-        .nav-link:hover {
-            color: #e94560 !important;
+
+        .btn-submit:hover {
+            background: #c73e54;
+            color: white;
         }
     </style>
 </head>
+
 <body>
 
-<!-- NAVIGATION -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="index.html"><strong>NamPol</strong> Recruitment</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="status.html">Status</a></li>
-                <li class="nav-item"><a class="nav-link" href="login.html">Logout</a></li>
-                <li class="nav-item"><a class="nav-link" href="admin_login.html">Admin</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<!-- MAIN FORM -->
-<div class="container">
-    <div class="form-container">
-        <h2 class="text-center mb-4">Police Recruitment Application Form</h2>
-        <p class="text-center text-white-50">Fill in all required fields carefully</p>
-        
-        <form action="#" method="POST" enctype="multipart/form-data">
-            
-            <!-- SECTION 1: POSITION APPLIED FOR -->
-            <h4 class="section-title">Position Applied For</h4>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Position</label>
-                    <select class="form-control" required>
-                        <option value="">Select Position</option>
-                        <option>Police Constable</option>
-                        <option>Senior Police Constable</option>
-                        <option>Sergeant</option>
-                        <option>Inspector</option>
-                        <option>Chief Inspector</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Station Preference</label>
-                    <select class="form-control" required>
-                        <option value="">Select Station</option>
-                        <option>Windhoek Central</option>
-                        <option>Katutura</option>
-                        <option>Swakopmund</option>
-                        <option>Oshakati</option>
-                        <option>Rundu</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- SECTION 2: PERSONAL INFORMATION -->
-            <h4 class="section-title">Personal Information</h4>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">First Name</label>
-                    <input type="text" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Last Name</label>
-                    <input type="text" class="form-control" required>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">ID Number</label>
-                    <input type="text" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Date of Birth</label>
-                    <input type="date" class="form-control" required>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Nationality</label>
-                    <input type="text" class="form-control" value="Namibian" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Gender</label>
-                    <select class="form-control" required>
-                        <option value="">Select Gender</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- SECTION 3: CONTACT INFORMATION -->
-            <h4 class="section-title">Contact Information</h4>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Phone Number</label>
-                    <input type="tel" class="form-control" required>
-                </div>
-            </div>
-            
-            <label class="form-label">Physical Address</label>
-            <input type="text" class="form-control" required>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Region</label>
-                    <select class="form-control" required>
-                        <option value="">Select Region</option>
-                        <option>Khomas</option>
-                        <option>Ohangwena</option>
-                        <option>Omusati</option>
-                        <option>Oshana</option>
-                        <option>Oshikoto</option>
-                        <option>Otjozondjupa</option>
-                        <option>Erongo</option>
-                        <option>Hardap</option>
-                        <option>Karas</option>
-                        <option>Kavango East</option>
-                        <option>Kavango West</option>
-                        <option>Zambezi</option>
-                        <option>Kunene</option>
-                        <option>Omaheke</option>
-                        <option>Ompundja</option>
-                        <option>//Kharas</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Constituency</label>
-                    <input type="text" class="form-control" required>
-                </div>
-            </div>
-            
-            <!-- SECTION 4: EDUCATIONAL QUALIFICATIONS -->
-            <h4 class="section-title">Educational Qualifications</h4>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Highest Qualification</label>
-                    <select class="form-control" required>
-                        <option value="">Select Qualification</option>
-                        <option>Grade 10 (NQF Level 2)</option>
-                        <option>Grade 12 (NQF Level 4)</option>
-                        <option>Certificate (NQF Level 5)</option>
-                        <option>Diploma (NQF Level 6)</option>
-                        <option>Bachelor's Degree (NQF Level 7)</option>
-                        <option>Honours (NQF Level 8)</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Subject / Field</label>
-                    <input type="text" class="form-control" placeholder="e.g. Criminal Justice, Law, etc.">
-                </div>
-            </div>
-            
-            <label class="form-label">Institution</label>
-            <input type="text" class="form-control" required>
-            
-            <label class="form-label">Year of Graduation</label>
-            <input type="number" class="form-control" min="1990" max="2026" required>
-            
-            <!-- SECTION 5: DOCUMENT UPLOADS -->
-            <h4 class="section-title">Document Uploads</h4>
-            
-            <div class="upload-area">
-                <h5 style="color:#e94560">📄 CV / Resume</h5>
-                <p class="text-white-50">Upload your CV (PDF, DOC, or DOCX)</p>
-                <input type="file" class="form-control" accept=".pdf,.doc,.docx" required>
-            </div>
-            
-            <div class="upload-area">
-                <h5 style="color:#e94560">📜 ID Document</h5>
-                <p class="text-white-50">Upload a scanned copy of your ID (PDF or Image)</p>
-                <input type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
-            </div>
-            
-            <div class="upload-area">
-                <h5 style="color:#e94560">🎓 Qualifications</h5>
-                <p class="text-white-50">Upload your educational certificates (PDF)</p>
-                <input type="file" class="form-control" accept=".pdf" required>
-            </div>
-            
-            <div class="upload-area">
-                <h5 style="color:#e94560">👮 Police Clearance</h5>
-                <p class="text-white-50">Upload your police clearance certificate (PDF)</p>
-                <input type="file" class="form-control" accept=".pdf" required>
-            </div>
-            
-            <!-- SECTION 6: DECLARATION -->
-            <h4 class="section-title">Declaration</h4>
-            
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="declaration" required>
-                <label class="form-check-label" for="declaration">
-                    I declare that all information provided is true and correct. I understand that any false information may result in disqualification.
-                </label>
-            </div>
-            
-            <button type="submit" class="btn btn-submit">Submit Application</button>
-            
-        </form>
+<div
+    id="loadingScreen"
+    class="d-flex justify-content-center align-items-center"
+>
+    <div class="text-center">
+        <div class="spinner-border mb-3"></div>
+        <p>Preparing your application...</p>
     </div>
 </div>
 
+
+<div
+    id="applicationPage"
+    class="container application-container d-none"
+>
+    <div class="card application-card">
+
+        <div class="application-header">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                <div>
+                    <h2 class="mb-1">New Application</h2>
+                    <p class="mb-0">NamPol E-Recruitment System</p>
+                </div>
+
+                <button
+                    id="dashboardBtn"
+                    class="btn btn-outline-light"
+                    type="button"
+                >
+                    Back to Dashboard
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4 p-md-5">
+
+            <div
+                id="alertBox"
+                class="alert d-none"
+                role="alert"
+            ></div>
+
+
+            <div
+                id="documentWarning"
+                class="alert alert-warning d-none"
+            >
+                <strong>Documents required.</strong>
+                Complete the applicant document stage before submitting
+                an application.
+
+                <div class="mt-3">
+                    <a
+                        href="documents.html"
+                        class="btn btn-warning"
+                    >
+                        Go to Documents
+                    </a>
+                </div>
+            </div>
+
+
+            <form id="applicationForm">
+
+                <h4 class="section-title">
+                    Vacancy
+                </h4>
+
+
+                <div class="mb-3">
+
+                    <label
+                        for="position"
+                        class="form-label"
+                    >
+                        Position Applied For
+                    </label>
+
+                    <select
+                        id="position"
+                        class="form-select"
+                        required
+                    >
+                        <option value="">
+                            Select a position
+                        </option>
+
+                        <option value="Police Constable">
+                            Police Constable
+                        </option>
+
+                        <option value="Senior Police Constable">
+                            Senior Police Constable
+                        </option>
+
+                        <option value="Sergeant">
+                            Sergeant
+                        </option>
+
+                        <option value="Inspector">
+                            Inspector
+                        </option>
+
+                        <option value="Chief Inspector">
+                            Chief Inspector
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label
+                        for="stationPreference"
+                        class="form-label"
+                    >
+                        Station Preference
+                    </label>
+
+                    <select
+                        id="stationPreference"
+                        class="form-select"
+                        required
+                    >
+                        <option value="">
+                            Select station
+                        </option>
+
+                        <option value="Windhoek Central">
+                            Windhoek Central
+                        </option>
+
+                        <option value="Katutura">
+                            Katutura
+                        </option>
+
+                        <option value="Swakopmund">
+                            Swakopmund
+                        </option>
+
+                        <option value="Oshakati">
+                            Oshakati
+                        </option>
+
+                        <option value="Rundu">
+                            Rundu
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <div
+                    id="positionRequirements"
+                    class="requirement-box d-none mt-4"
+                >
+                    <h6>Prototype Vacancy Requirements</h6>
+
+                    <div id="requirementsText"></div>
+                </div>
+
+
+                <h4 class="section-title">
+                    Applicant Information
+                </h4>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            First Name
+                        </label>
+
+                        <input
+                            id="firstName"
+                            type="text"
+                            class="form-control readonly-field"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Last Name
+                        </label>
+
+                        <input
+                            id="lastName"
+                            type="text"
+                            class="form-control readonly-field"
+                            readonly
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Email Address
+                        </label>
+
+                        <input
+                            id="email"
+                            type="email"
+                            class="form-control readonly-field"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Phone Number
+                        </label>
+
+                        <input
+                            id="phone"
+                            type="text"
+                            class="form-control readonly-field"
+                            readonly
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Region
+                        </label>
+
+                        <input
+                            id="region"
+                            type="text"
+                            class="form-control readonly-field"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Date of Birth
+                        </label>
+
+                        <input
+                            id="dateOfBirth"
+                            type="text"
+                            class="form-control readonly-field"
+                            readonly
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <h4 class="section-title">
+                    Educational Information
+                </h4>
+
+
+                <div class="mb-3">
+
+                    <label
+                        for="qualification"
+                        class="form-label"
+                    >
+                        Highest Qualification
+                    </label>
+
+                    <select
+                        id="qualification"
+                        class="form-select"
+                        required
+                    >
+                        <option value="">
+                            Select qualification
+                        </option>
+
+                        <option value="Grade 10">
+                            Grade 10
+                        </option>
+
+                        <option value="Grade 11">
+                            Grade 11
+                        </option>
+
+                        <option value="Grade 12">
+                            Grade 12
+                        </option>
+
+                        <option value="Certificate">
+                            Certificate
+                        </option>
+
+                        <option value="Diploma">
+                            Diploma
+                        </option>
+
+                        <option value="Bachelor Degree">
+                            Bachelor's Degree
+                        </option>
+
+                        <option value="Honours Degree">
+                            Honours Degree
+                        </option>
+
+                        <option value="Masters Degree">
+                            Master's Degree
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label
+                            for="fieldOfStudy"
+                            class="form-label"
+                        >
+                            Field of Study
+                        </label>
+
+                        <input
+                            id="fieldOfStudy"
+                            type="text"
+                            class="form-control"
+                            placeholder="Example: Criminal Justice"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label
+                            for="institution"
+                            class="form-label"
+                        >
+                            Institution
+                        </label>
+
+                        <input
+                            id="institution"
+                            type="text"
+                            class="form-control"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label
+                        for="graduationYear"
+                        class="form-label"
+                    >
+                        Year Completed
+                    </label>
+
+                    <input
+                        id="graduationYear"
+                        type="number"
+                        class="form-control"
+                        min="1980"
+                        max="2026"
+                        required
+                    >
+
+                </div>
+
+
+                <h4 class="section-title">
+                    Documents
+                </h4>
+
+
+                <div class="alert alert-info">
+
+                    Your previously validated applicant document records
+                    will be linked to this application.
+
+                    <strong>
+                        You do not need to select your documents again.
+                    </strong>
+
+                </div>
+
+
+                <h4 class="section-title">
+                    Declaration
+                </h4>
+
+
+                <div class="form-check mb-4">
+
+                    <input
+                        id="declaration"
+                        class="form-check-input"
+                        type="checkbox"
+                        required
+                    >
+
+                    <label
+                        for="declaration"
+                        class="form-check-label"
+                    >
+                        I declare that the information supplied in this
+                        application is true and correct to the best of my
+                        knowledge.
+                    </label>
+
+                </div>
+
+
+                <button
+                    id="submitBtn"
+                    type="submit"
+                    class="btn btn-submit w-100"
+                >
+                    Submit Application
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+
 <script type="module">
-import { checkAuthState, getUserData } from '../js/auth.js';
-import { submitApplication, addAuditLog } from '../js/firestore.js';
-import { uploadApplicationDocuments } from '../js/storage.js';
+
+import {
+    auth,
+    db
+} from "../js/firebase-config.js";
+
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+
+import {
+    doc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+import {
+    submitApplication
+} from "../js/firestore.js";
+
+
+const loadingScreen =
+    document.getElementById("loadingScreen");
+
+const applicationPage =
+    document.getElementById("applicationPage");
+
+const applicationForm =
+    document.getElementById("applicationForm");
+
+const alertBox =
+    document.getElementById("alertBox");
+
+const documentWarning =
+    document.getElementById("documentWarning");
+
+const submitBtn =
+    document.getElementById("submitBtn");
+
+const position =
+    document.getElementById("position");
+
+const positionRequirements =
+    document.getElementById("positionRequirements");
+
+const requirementsText =
+    document.getElementById("requirementsText");
+
 
 let currentUser = null;
 let currentUserData = null;
+let documentsReady = false;
 
-// Check login state
-checkAuthState(async (user) => {
-    if (!user) {
-        alert('Please login to apply');
-        window.location.href = 'login.html';
-        return;
-    }
-    currentUser = user;
-    
-    // Pre-fill form if we have user data
-    const userData = await getUserData(user.uid);
-    if (userData.success) {
-        currentUserData = userData.data;
-        
-        const form = document.querySelector('form');
-        const inputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="date"]');
-        
-        // Auto-fill fields
-        if (inputs[0]) inputs[0].value = userData.data.firstName || '';
-        if (inputs[1]) inputs[1].value = userData.data.lastName || '';
-        if (inputs[2]) inputs[2].value = userData.data.idNumber || '';
-        if (inputs[3]) inputs[3].value = userData.data.dob || '';
-        // Find email field
-        const emailField = form.querySelector('input[type="email"]');
-        if (emailField) emailField.value = userData.data.email || '';
-        const phoneField = form.querySelector('input[type="tel"]');
-        if (phoneField) phoneField.value = userData.data.phone || '';
-    }
-});
 
-// Handle form submission
-document.querySelector('form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    if (!currentUser) {
-        alert('Please login first!');
-        return;
-    }
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Submitting application...';
-    submitBtn.disabled = true;
-    
-    // Gather data
-    const selects = form.querySelectorAll('select');
-    const inputs = form.querySelectorAll('input');
-    const fileInputs = form.querySelectorAll('input[type="file"]');
-    
-    const applicationData = {
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        position: selects[0].value,
-        station: selects[1].value,
-        firstName: currentUserData?.firstName || '',
-        lastName: currentUserData?.lastName || '',
-        idNumber: currentUserData?.idNumber || '',
-        dob: currentUserData?.dob || '',
-        nationality: 'Namibian',
-        gender: currentUserData?.gender || '',
-        email: currentUserData?.email || currentUser.email,
-        phone: currentUserData?.phone || '',
-        address: currentUserData?.address || '',
-        region: currentUserData?.region || selects[2]?.value,
-        constituency: inputs[3]?.value || '',
-        qualification: selects[3]?.value || '',
-        field: inputs[4]?.value || '',
-        institution: inputs[5]?.value || '',
-        graduationYear: inputs[6]?.value || ''
-    };
-    
-    // Submit application
-    const result = await submitApplication(applicationData);
-    
-    if (result.success) {
-        // Upload files
-        const files = {
-            cv: fileInputs[0]?.files[0],
-            id: fileInputs[1]?.files[0],
-            qualification: fileInputs[2]?.files[0],
-            clearance: fileInputs[3]?.files[0]
-        };
-        
-        await uploadApplicationDocuments(result.id, files);
-        
-        // Log it
-        await addAuditLog(
-            'APPLICATION_SUBMITTED',
-            currentUser.uid,
-            `Application ${result.applicationId} submitted for ${applicationData.position} in ${applicationData.region}`,
-            'ACTION',
-            applicationData.region
+const vacancyRequirements = {
+
+    "Police Constable":
+        "Prototype requirement: completed applicant profile, validated document records and relevant educational information.",
+
+    "Senior Police Constable":
+        "Prototype requirement: completed profile, validated documents and relevant qualifications.",
+
+    "Sergeant":
+        "Prototype requirement: completed profile, validated documents and relevant qualifications/experience.",
+
+    "Inspector":
+        "Prototype requirement: completed profile, validated documents and relevant qualifications/experience.",
+
+    "Chief Inspector":
+        "Prototype requirement: completed profile, validated documents and relevant qualifications/experience."
+};
+
+
+function showAlert(message, type = "danger") {
+
+    alertBox.className =
+        `alert alert-${type}`;
+
+    alertBox.textContent =
+        message;
+
+    alertBox.classList.remove("d-none");
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+
+function hideAlert() {
+
+    alertBox.classList.add("d-none");
+    alertBox.textContent = "";
+}
+
+
+function populateApplicant(data, user) {
+
+    document.getElementById("firstName").value =
+        data.firstName || "";
+
+    document.getElementById("lastName").value =
+        data.lastName || "";
+
+    document.getElementById("email").value =
+        data.email || user.email || "";
+
+    document.getElementById("phone").value =
+        data.phone || "";
+
+    document.getElementById("region").value =
+        data.region || "";
+
+    document.getElementById("dateOfBirth").value =
+        data.dateOfBirth || "";
+}
+
+
+position.addEventListener(
+    "change",
+    () => {
+
+        const selectedPosition =
+            position.value;
+
+        if (!selectedPosition) {
+
+            positionRequirements.classList.add(
+                "d-none"
+            );
+
+            requirementsText.textContent = "";
+
+            return;
+        }
+
+        requirementsText.textContent =
+            vacancyRequirements[selectedPosition]
+            || "Requirements will be assessed during review.";
+
+        positionRequirements.classList.remove(
+            "d-none"
         );
-        
-        alert(`✅ Application submitted successfully!\n\nApplication ID: ${result.applicationId}\n\nSave this ID to check your status.`);
-        window.location.href = 'dashboard.html';
-    } else {
-        alert('❌ Submission failed: ' + result.error);
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
     }
-});
+);
+
+
+onAuthStateChanged(
+    auth,
+    async (user) => {
+
+        if (!user) {
+
+            window.location.href =
+                "login.html";
+
+            return;
+        }
+
+
+        if (!user.emailVerified) {
+
+            window.location.href =
+                "login.html";
+
+            return;
+        }
+
+
+        try {
+
+            const userRef =
+                doc(db, "users", user.uid);
+
+            const userSnapshot =
+                await getDoc(userRef);
+
+
+            if (!userSnapshot.exists()) {
+
+                window.location.href =
+                    "login.html";
+
+                return;
+            }
+
+
+            const data =
+                userSnapshot.data();
+
+
+            if (
+                data.role !== "applicant" ||
+                data.accountStatus !== "active"
+            ) {
+
+                window.location.href =
+                    "login.html";
+
+                return;
+            }
+
+            if (data.profileCompleted !== true) {
+                window.location.href = "profile.html";
+                return;
+            }
+
+            currentUser = user;
+            currentUserData = data;
+
+
+            populateApplicant(
+                data,
+                user
+            );
+
+
+            const documentRef =
+                doc(
+                    db,
+                    "applicantDocuments",
+                    user.uid
+                );
+
+
+            const documentSnapshot =
+                await getDoc(documentRef);
+
+
+            documentsReady =
+                documentSnapshot.exists()
+                && documentSnapshot.data()
+                    .documentsValidated === true;
+
+
+            if (!documentsReady) {
+
+                documentWarning.classList.remove(
+                    "d-none"
+                );
+
+                submitBtn.disabled = true;
+
+            } else {
+
+                documentWarning.classList.add(
+                    "d-none"
+                );
+
+                submitBtn.disabled = false;
+            }
+
+
+            loadingScreen.classList.add(
+                "d-none"
+            );
+
+            applicationPage.classList.remove(
+                "d-none"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Application page loading error:",
+                error
+            );
+
+
+            loadingScreen.classList.add(
+                "d-none"
+            );
+
+            applicationPage.classList.remove(
+                "d-none"
+            );
+
+
+            showAlert(
+                "Unable to load your application information."
+            );
+        }
+    }
+);
+
+
+applicationForm.addEventListener(
+    "submit",
+    async (event) => {
+
+        event.preventDefault();
+
+        hideAlert();
+
+
+        if (
+            !currentUser ||
+            !currentUserData
+        ) {
+
+            showAlert(
+                "Your session has expired. Please log in again."
+            );
+
+            return;
+        }
+
+        if (currentUserData.profileCompleted !== true) {
+            window.location.href = "profile.html";
+            return;
+        }
+
+        if (!documentsReady) {
+
+            showAlert(
+                "Complete your document records before submitting an application.",
+                "warning"
+            );
+
+            return;
+        }
+
+
+        if (!applicationForm.checkValidity()) {
+
+            applicationForm.reportValidity();
+            return;
+        }
+
+
+        submitBtn.disabled = true;
+
+        submitBtn.textContent =
+            "Submitting Application...";
+
+
+        const applicationData = {
+
+            applicantId:
+                currentUser.uid,
+
+            applicantName:
+                `${currentUserData.firstName || ""} ${currentUserData.lastName || ""}`.trim(),
+
+            applicantEmail:
+                currentUser.email,
+
+            position:
+                position.value,
+
+            stationPreference:
+                document.getElementById(
+                    "stationPreference"
+                ).value,
+
+            region:
+                currentUserData.region || "",
+
+            qualification:
+                document.getElementById(
+                    "qualification"
+                ).value,
+
+            fieldOfStudy:
+                document.getElementById(
+                    "fieldOfStudy"
+                ).value.trim(),
+
+            institution:
+                document.getElementById(
+                    "institution"
+                ).value.trim(),
+
+            graduationYear:
+                Number(
+                    document.getElementById(
+                        "graduationYear"
+                    ).value
+                )
+        };
+
+
+        const result =
+            await submitApplication(
+                applicationData
+            );
+
+
+        if (result.success) {
+
+            alert(
+                "Application submitted successfully!\n\n" +
+                "Application Reference: " +
+                result.applicationReference +
+                "\n\nYou can track the application from your dashboard."
+            );
+
+
+            window.location.href =
+                "dashboard.html";
+
+            return;
+        }
+
+
+        showAlert(
+            result.error ||
+            "Unable to submit your application."
+        );
+
+
+        submitBtn.disabled = false;
+
+        submitBtn.textContent =
+            "Submit Application";
+    }
+);
+
+
+document.getElementById(
+    "dashboardBtn"
+).addEventListener(
+    "click",
+    () => {
+
+        window.location.href =
+            "dashboard.html";
+    }
+);
+
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+></script>
+
 </body>
 </html>

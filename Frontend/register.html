@@ -1,289 +1,881 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - NamPol Recruitment</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>Applicant Registration - NamPol Recruitment</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
     <style>
         body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            background: #f4f6f9;
             min-height: 100vh;
-            color: white;
             padding-top: 80px;
         }
-        
-        .register-container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
-            margin: 20px auto;
-            border: 1px solid rgba(255,255,255,0.2);
+
+        .navbar {
+            background: #0f3460 !important;
         }
-        
-        .form-control {
-            background: rgba(255,255,255,0.9);
-            border: none;
-            border-radius: 10px;
-            padding: 12px;
+
+        .register-container {
+            max-width: 850px;
+            margin: 30px auto 60px;
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .page-title {
+            color: #0f3460;
+            font-weight: bold;
+        }
+
+        .section-title {
+            color: #0f3460;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+            margin-top: 25px;
             margin-bottom: 20px;
         }
-        
-        .form-label {
-            font-weight: 500;
+
+        .form-control,
+        .form-select {
+            padding: 11px;
+            border-radius: 8px;
         }
-        
+
         .btn-register {
-            background: #e94560;
+            background: #0f3460;
             color: white;
-            width: 100%;
-            padding: 12px;
-            border-radius: 30px;
             border: none;
-            font-size: 1.1rem;
+            width: 100%;
+            padding: 13px;
+            border-radius: 30px;
+            font-size: 1.05rem;
             font-weight: bold;
+        }
+
+        .btn-register:hover {
+            background: #16213e;
+            color: white;
+        }
+
+        .btn-register:disabled {
+            opacity: 0.6;
+        }
+
+        .error-message {
+            display: none;
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+            color: #842029;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            display: none;
+            background: #d1e7dd;
+            border: 1px solid #badbcc;
+            color: #0f5132;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #e7f1ff;
+            border-left: 4px solid #0f3460;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
             margin-top: 20px;
         }
-        
-        .btn-register:hover {
-            background: #c73e54;
+
+        .required-star {
+            color: #dc3545;
         }
-        
-        .login-link {
-            color: #e94560;
-            text-decoration: none;
-        }
-        
-        .login-link:hover {
-            text-decoration: underline;
-        }
-        
-        .navbar {
-            background: rgba(0,0,0,0.8) !important;
-        }
-        
-        .navbar-brand {
-            font-weight: bold;
-        }
-        
-        .nav-link {
-            color: white !important;
-            margin-left: 15px;
-        }
-        
-        .nav-link:hover {
-            color: #e94560 !important;
-        }
-        
-        .section-title {
-            border-bottom: 2px solid #e94560;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            margin-top: 30px;
-            color: #e94560;
+
+        .password-requirements {
+            font-size: 0.85rem;
+            color: #6c757d;
         }
     </style>
 </head>
+
 <body>
 
-<!-- NAVIGATION -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container">
-        <a class="navbar-brand" href="index.html"><strong>NamPol</strong> Recruitment</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        <a class="navbar-brand" href="index.html">
+            <strong>NamPol</strong> Recruitment
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+        >
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarNav">
+
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
-                <li class="nav-item"><a class="nav-link" href="status.html">Check Status</a></li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">
+                        Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="login.html">
+                        Applicant Login
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="register.html">
+                        Register
+                    </a>
+                </li>
+
             </ul>
+
         </div>
     </div>
 </nav>
 
+
 <div class="container">
+
     <div class="register-container">
-        <h2 class="text-center mb-4">Create Applicant Account</h2>
-        
-        <form action="#" method="POST">
-            <!-- Personal Information -->
-            <h5 class="section-title">Personal Details</h5>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">First Name</label>
-                    <input type="text" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Last Name</label>
-                    <input type="text" class="form-control" required>
-                </div>
-            </div>
-            
-            <label class="form-label">ID Number / Passport</label>
-            <input type="text" class="form-control" required>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Date of Birth</label>
-                    <input type="date" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Gender</label>
-                    <select class="form-control" required>
-                        <option value="">Select Gender</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- Contact Information -->
-            <h5 class="section-title">Contact Information</h5>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Phone Number</label>
-                    <input type="tel" class="form-control" required>
-                </div>
-            </div>
-            
-            <label class="form-label">Physical Address</label>
-            <input type="text" class="form-control" required>
-            
-            <label class="form-label">Region</label>
-            <select class="form-control" required>
-                <option value="">Select Region</option>
-                <option>Khomas</option>
-                <option>Ohangwena</option>
-                <option>Omusati</option>
-                <option>Oshana</option>
-                <option>Oshikoto</option>
-                <option>Otjozondjupa</option>
-                <option>Erongo</option>
-                <option>Hardap</option>
-                <option>Karas</option>
-                <option>Kavango East</option>
-                <option>Kavango West</option>
-                <option>Zambezi</option>
-                <option>Kunene</option>
-                <option>Omaheke</option>
-                <option>Ompundja</option>
-                <option>//Kharas</option>
-            </select>
-            
-            <!-- Account Security -->
-            <h5 class="section-title">Account Security</h5>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" required>
-                </div>
-            </div>
-            
-            <!-- Submit -->
-            <button type="submit" class="btn btn-register">Register</button>
-            
-            <p class="text-center mt-3">
-                Already have an account? <a href="login.html" class="login-link">Login here</a>
+
+        <div class="text-center mb-4">
+
+            <h2 class="page-title">
+                Applicant Registration
+            </h2>
+
+            <p class="text-muted">
+                Create your NamPol Recruitment applicant account
             </p>
+
+        </div>
+
+
+        <div class="info-box">
+
+            <strong>Account Verification</strong>
+
+            <br>
+
+            After registration, a verification email will be sent
+            to your email address. You must verify your email before
+            you can access the applicant portal.
+
+        </div>
+
+
+        <div
+            class="error-message"
+            id="errorMessage"
+            role="alert"
+        ></div>
+
+
+        <div
+            class="success-message"
+            id="successMessage"
+            role="alert"
+        ></div>
+
+
+        <form id="registrationForm">
+
+            <!-- PERSONAL INFORMATION -->
+
+            <h5 class="section-title">
+                1. Personal Information
+            </h5>
+
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="firstName" class="form-label">
+                        First Name
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="firstName"
+                        autocomplete="given-name"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="lastName" class="form-label">
+                        Last Name
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="lastName"
+                        autocomplete="family-name"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="mb-3">
+
+                <label for="idNumber" class="form-label">
+                    Namibian ID Number / Passport Number
+                    <span class="required-star">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    class="form-control"
+                    id="idNumber"
+                    required
+                >
+
+            </div>
+
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="dateOfBirth" class="form-label">
+                        Date of Birth
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="dateOfBirth"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="gender" class="form-label">
+                        Gender
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <select
+                        class="form-select"
+                        id="gender"
+                        required
+                    >
+
+                        <option value="">
+                            Select gender
+                        </option>
+
+                        <option value="Male">
+                            Male
+                        </option>
+
+                        <option value="Female">
+                            Female
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                        <option value="Prefer not to say">
+                            Prefer not to say
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- CONTACT INFORMATION -->
+
+            <h5 class="section-title">
+                2. Contact Information
+            </h5>
+
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="email" class="form-label">
+                        Email Address
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="email"
+                        autocomplete="email"
+                        placeholder="example@email.com"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="phone" class="form-label">
+                        Mobile Number
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <input
+                        type="tel"
+                        class="form-control"
+                        id="phone"
+                        autocomplete="tel"
+                        placeholder="+264..."
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="mb-3">
+
+                <label for="address" class="form-label">
+                    Physical Address
+                    <span class="required-star">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    class="form-control"
+                    id="address"
+                    autocomplete="street-address"
+                    required
+                >
+
+            </div>
+
+
+            <div class="mb-3">
+
+                <label for="region" class="form-label">
+                    Region
+                    <span class="required-star">*</span>
+                </label>
+
+                <select
+                    class="form-select"
+                    id="region"
+                    required
+                >
+
+                    <option value="">
+                        Select your region
+                    </option>
+
+                    <option value="Erongo">Erongo</option>
+                    <option value="Hardap">Hardap</option>
+                    <option value="Karas">ǁKaras</option>
+                    <option value="Kavango East">Kavango East</option>
+                    <option value="Kavango West">Kavango West</option>
+                    <option value="Khomas">Khomas</option>
+                    <option value="Kunene">Kunene</option>
+                    <option value="Ohangwena">Ohangwena</option>
+                    <option value="Omaheke">Omaheke</option>
+                    <option value="Omusati">Omusati</option>
+                    <option value="Oshana">Oshana</option>
+                    <option value="Oshikoto">Oshikoto</option>
+                    <option value="Otjozondjupa">Otjozondjupa</option>
+                    <option value="Zambezi">Zambezi</option>
+
+                </select>
+
+            </div>
+
+
+            <!-- ACCOUNT SECURITY -->
+
+            <h5 class="section-title">
+                3. Account Security
+            </h5>
+
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="password" class="form-label">
+                        Password
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="confirmPassword" class="form-label">
+                        Confirm Password
+                        <span class="required-star">*</span>
+                    </label>
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="confirmPassword"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="password-requirements mb-4">
+
+                Password must contain at least 8 characters,
+                including an uppercase letter, lowercase letter,
+                and a number.
+
+            </div>
+
+
+            <!-- AGREEMENT -->
+
+            <div class="form-check mb-4">
+
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="agreement"
+                    required
+                >
+
+                <label
+                    class="form-check-label"
+                    for="agreement"
+                >
+
+                    I confirm that the information provided is
+                    accurate and belongs to me.
+
+                </label>
+
+            </div>
+
+
+            <!-- REGISTER BUTTON -->
+
+            <button
+                type="submit"
+                class="btn btn-register"
+                id="registerButton"
+            >
+                Create Applicant Account
+            </button>
+
+
+            <div
+                class="loading"
+                id="loading"
+            >
+
+                <div
+                    class="spinner-border text-primary"
+                    role="status"
+                >
+                    <span class="visually-hidden">
+                        Loading...
+                    </span>
+                </div>
+
+                <p class="mt-2 text-muted">
+                    Creating your account...
+                </p>
+
+            </div>
+
         </form>
+
+
+        <hr class="my-4">
+
+
+        <p class="text-center mb-0">
+
+            Already registered?
+
+            <a href="login.html">
+                Applicant Login
+            </a>
+
+        </p>
+
     </div>
+
 </div>
 
-<!-- Firebase Integration Script -->
-<script type="module">
-import { registerUser } from '../js/auth.js';
-import { addAuditLog } from '../js/firestore.js';
 
-document.querySelector('form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const form = e.target;
-    const inputs = form.querySelectorAll('input');
-    const selects = form.querySelectorAll('select');
-    
-    // Extract form values (matches your HTML structure)
-    const firstName = inputs[0].value;
-    const lastName = inputs[1].value;
-    const idNumber = inputs[2].value;
-    const dob = inputs[3].value;
-    const gender = selects[0].value;
-    const email = inputs[4].value;
-    const phone = inputs[5].value;
-    const address = inputs[6].value;
-    const region = selects[1].value;
-    const password = inputs[7].value;
-    const confirmPassword = inputs[8].value;
-    
-    // Validate passwords match
-    if (password !== confirmPassword) {
-        alert('❌ Passwords do not match!');
-        return;
+<script type="module">
+
+    import {
+        registerUser
+    } from "../js/auth.js";
+
+
+    const form =
+        document.getElementById("registrationForm");
+
+    const registerButton =
+        document.getElementById("registerButton");
+
+    const loading =
+        document.getElementById("loading");
+
+    const errorMessage =
+        document.getElementById("errorMessage");
+
+    const successMessage =
+        document.getElementById("successMessage");
+
+
+    function showError(message) {
+
+        successMessage.style.display = "none";
+
+        errorMessage.textContent = message;
+
+        errorMessage.style.display = "block";
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     }
-    
-    if (password.length < 6) {
-        alert('❌ Password must be at least 6 characters!');
-        return;
+
+
+    function showSuccess(message) {
+
+        errorMessage.style.display = "none";
+
+        successMessage.textContent = message;
+
+        successMessage.style.display = "block";
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     }
-    
-    // Show loading
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Creating account...';
-    submitBtn.disabled = true;
-    
-    // Create user data object
-    const userData = {
-        firstName,
-        lastName,
-        idNumber,
-        dob,
-        gender,
-        email,
-        phone,
-        address,
-        region
-    };
-    
-    // Register user
-    const result = await registerUser(email, password, userData);
-    
-    if (result.success) {
-        // Log the registration
-        await addAuditLog(
-            'USER_REGISTRATION',
-            result.user.uid,
-            `New applicant registered: ${firstName} ${lastName} (${email}) in ${region}`,
-            'ACTION',
-            region
+
+
+    function hideMessages() {
+
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+
+        errorMessage.textContent = "";
+        successMessage.textContent = "";
+    }
+
+
+    function setLoading(isLoading) {
+
+        registerButton.disabled = isLoading;
+
+        loading.style.display =
+            isLoading ? "block" : "none";
+
+        registerButton.textContent =
+            isLoading
+                ? "Creating Account..."
+                : "Create Applicant Account";
+    }
+
+
+    function isStrongPassword(password) {
+
+        const hasUppercase =
+            /[A-Z]/.test(password);
+
+        const hasLowercase =
+            /[a-z]/.test(password);
+
+        const hasNumber =
+            /[0-9]/.test(password);
+
+        return (
+            password.length >= 8 &&
+            hasUppercase &&
+            hasLowercase &&
+            hasNumber
         );
-        
-        alert('✅ Registration successful!\n\nPlease check your email to verify your account.\n\nYou can now log in.');
-        window.location.href = 'login.html';
-    } else {
-        alert('❌ Registration failed:\n\n' + result.error);
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
     }
-});
+
+
+    form.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+            hideMessages();
+
+
+            const firstName =
+                document
+                    .getElementById("firstName")
+                    .value
+                    .trim();
+
+
+            const lastName =
+                document
+                    .getElementById("lastName")
+                    .value
+                    .trim();
+
+
+            const idNumber =
+                document
+                    .getElementById("idNumber")
+                    .value
+                    .trim();
+
+
+            const dateOfBirth =
+                document
+                    .getElementById("dateOfBirth")
+                    .value;
+
+
+            const gender =
+                document
+                    .getElementById("gender")
+                    .value;
+
+
+            const email =
+                document
+                    .getElementById("email")
+                    .value
+                    .trim()
+                    .toLowerCase();
+
+
+            const phone =
+                document
+                    .getElementById("phone")
+                    .value
+                    .trim();
+
+
+            const address =
+                document
+                    .getElementById("address")
+                    .value
+                    .trim();
+
+
+            const region =
+                document
+                    .getElementById("region")
+                    .value;
+
+
+            const password =
+                document
+                    .getElementById("password")
+                    .value;
+
+
+            const confirmPassword =
+                document
+                    .getElementById("confirmPassword")
+                    .value;
+
+
+            const agreement =
+                document
+                    .getElementById("agreement")
+                    .checked;
+
+
+            if (
+                !firstName ||
+                !lastName ||
+                !idNumber ||
+                !dateOfBirth ||
+                !gender ||
+                !email ||
+                !phone ||
+                !address ||
+                !region
+            ) {
+
+                showError(
+                    "Please complete all required fields."
+                );
+
+                return;
+            }
+
+
+            if (!isStrongPassword(password)) {
+
+                showError(
+                    "Password must contain at least 8 characters, an uppercase letter, a lowercase letter, and a number."
+                );
+
+                return;
+            }
+
+
+            if (password !== confirmPassword) {
+
+                showError(
+                    "The passwords do not match."
+                );
+
+                return;
+            }
+
+
+            if (!agreement) {
+
+                showError(
+                    "Please confirm that the information provided is accurate."
+                );
+
+                return;
+            }
+
+
+            const userData = {
+
+                firstName: firstName,
+
+                lastName: lastName,
+
+                idNumber: idNumber,
+
+                dateOfBirth: dateOfBirth,
+
+                gender: gender,
+
+                phone: phone,
+
+                address: address,
+
+                region: region
+            };
+
+
+            setLoading(true);
+
+
+            const result =
+                await registerUser(
+                    email,
+                    password,
+                    userData
+                );
+
+
+            setLoading(false);
+
+
+            if (!result.success) {
+
+                showError(result.error);
+
+                return;
+            }
+
+
+            form.reset();
+
+
+            showSuccess(
+                "Account created successfully. A verification email has been sent to " +
+                email +
+                ". Please verify your email before logging in."
+            );
+
+
+            setTimeout(
+                function () {
+
+                    window.location.href =
+                        "login.html?registered=true";
+
+                },
+                4000
+            );
+        }
+    );
+
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+></script>
+
 </body>
+
 </html>

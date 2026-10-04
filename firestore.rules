@@ -1,0 +1,196 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function verifiedUser() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    function adminRecord() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function isActiveAdmin() {
+      return verifiedUser()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && adminRecord().active == true
+        && adminRecord().role in ['admin', 'recruiter', 'super_admin'];
+    }
+
+    function canReviewRegion(region) {
+      return isActiveAdmin()
+        && (adminRecord().role == 'super_admin'
+          || adminRecord().region == region);
+    }
+
+    function applicantRecord(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function applicantRecordAfter(uid) {
+      return getAfter(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function validStoredDocument(data, uid, type) {
+      return data is map
+        && data.storagePath is string
+        && data.storagePath.split('/').size() == 4
+        && data.storagePath.split('/')[0] == 'applicantDocuments'
+        && data.storagePath.split('/')[1] == uid
+        && data.storagePath.split('/')[2] == type
+        && data.uploaded == true
+        && data.validationStatus == 'uploaded';
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isActiveAdmin());
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.role == 'applicant'
+        && request.resource.data.accountStatus == 'active'
+        && request.resource.data.profileCompleted == false;
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && resource.data.role == 'applicant'
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.accountStatus == resource.data.accountStatus
+        && (resource.data.profileCompleted != true
+          || request.resource.data.profileCompleted == true)
+        && (resource.data.profileCompleted != true
+          || request.resource.data.region == resource.data.region)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'phone',
+          'address',
+          'region',
+          'highestQualification',
+          'employmentStatus',
+          'skills',
+          'profileCompleted',
+          'documentsUploaded',
+          'documentStorageMode',
+          'documentsUpdatedAt',
+          'emailVerificationPending',
+          'emailVerified',
+          'lastLoginAt',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /applicantDocuments/{uid} {
+      allow read: if verifiedUser()
+        && (request.auth.uid == uid || canReviewRegion(
+          applicantRecord(uid).region
+        ));
+      allow create, update: if verifiedUser()
+        && request.auth.uid == uid
+        && request.resource.data.applicantId == uid
+        && request.resource.data.documentsValidated == true
+        && request.resource.data.keys().hasOnly([
+          'applicantId',
+          'cv',
+          'identification',
+          'certificate',
+          'documentsValidated',
+          'updatedAt'
+        ])
+        && validStoredDocument(request.resource.data.cv, uid, 'cv')
+        && validStoredDocument(
+          request.resource.data.identification,
+          uid,
+          'identification'
+        )
+        && validStoredDocument(
+          request.resource.data.certificate,
+          uid,
+          'qualification_certificate'
+        );
+      allow delete: if false;
+    }
+
+    match /applications/{applicationId} {
+      allow read: if verifiedUser()
+        && (resource.data.applicantId == request.auth.uid
+          || canReviewRegion(resource.data.region));
+      allow create: if verifiedUser()
+        && request.resource.data.applicantId == request.auth.uid
+        && applicantRecord(request.auth.uid).role == 'applicant'
+        && applicantRecord(request.auth.uid).accountStatus == 'active'
+        && applicantRecord(request.auth.uid).profileCompleted == true
+        && request.resource.data.region == applicantRecord(request.auth.uid).region
+        && request.resource.data.documentsValidated == true
+        && get(
+          /databases/$(database)/documents/applicantDocuments/$(request.auth.uid)
+        ).data.documentsValidated == true
+        && request.resource.data.status == 'Submitted'
+        && request.resource.data.reviewedBy == null
+        && request.resource.data.decisionReason == null;
+      allow update: if canReviewRegion(resource.data.region)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'decisionReason',
+          'reviewedAt',
+          'reviewedBy',
+          'reviewedByStaffNumber',
+          'updatedAt'
+        ])
+        && resource.data.status != 'Approved'
+        && resource.data.status != 'Denied'
+        && resource.data.status != 'shortlisted'
+        && request.resource.data.status in ['Approved', 'Denied']
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt != null
+        && resource.data.status != 'approved'
+        && resource.data.status != 'denied'
+        && resource.data.status != 'rejected'
+        && request.resource.data.decisionReason is string
+        && request.resource.data.decisionReason.size() > 0
+        && request.resource.data.decisionReason.size() <= 1000;
+      allow delete: if false;
+    }
+
+    match /auditLogs/{eventId} {
+      allow read: if canReviewRegion(resource.data.region);
+      allow create: if signedIn()
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.region is string
+        && request.resource.data.action is string
+        && request.resource.data.entityType is string
+        && request.resource.data.entityId is string
+        && request.resource.data.createdAt == request.time
+        && (
+          (request.resource.data.actorRole == 'applicant'
+            && applicantRecordAfter(request.auth.uid).role == 'applicant'
+            && request.resource.data.targetApplicantId == request.auth.uid
+            && (
+              request.resource.data.action == 'applicant.registered'
+              || (verifiedUser()
+                && request.resource.data.action in [
+                  'applicant.profile_completed',
+                  'applicant.email_verified',
+                  'applicant.documents_uploaded',
+                  'application.submitted'
+                ])
+            ))
+          || (isActiveAdmin()
+            && request.resource.data.actorRole == adminRecord().role
+            && request.resource.data.action in [
+              'application.approved',
+              'application.denied',
+              'admin.documents_accessed'
+            ])
+        );
+      allow update, delete: if false;
+    }
+  }
+}

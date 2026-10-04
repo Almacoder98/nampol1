@@ -1,206 +1,1412 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Application Status - NamPol Recruitment</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/style.css"
+    >
+
     <style>
-        body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-            min-height: 100vh;
-            color: white;
-            padding-top: 80px;
-        }
-        
-        .status-container {
+        .status-page-container {
             padding: 30px;
         }
-        
-        .status-card {
-            background: rgba(255,255,255,0.1);
+
+        .status-main-card {
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 25px;
         }
-        
+
+        .application-selector {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .application-selector .form-select {
+            margin-bottom: 0 !important;
+        }
+
+        .application-reference {
+            color: #e94560;
+            font-weight: bold;
+        }
+
+        .status-pill {
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-submitted {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .status-review {
+            background: #ffc107;
+            color: #1a1a2e;
+        }
+
+        .status-approved {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-denied {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-other {
+            background: #6c757d;
+            color: white;
+        }
+
+        .application-info {
+            background: rgba(0,0,0,0.20);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 25px;
+        }
+
+        .info-label {
+            color: rgba(255,255,255,0.65);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
         .timeline {
             position: relative;
-            padding-left: 30px;
+            padding-left: 35px;
         }
-        
+
         .timeline::before {
-            content: '';
+            content: "";
             position: absolute;
-            left: 10px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: rgba(255,255,255,0.3);
+            left: 11px;
+            top: 5px;
+            bottom: 10px;
+            width: 3px;
+            background: rgba(255,255,255,0.2);
         }
-        
+
         .timeline-item {
             position: relative;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
-        
+
         .timeline-item::before {
-            content: '';
+            content: "";
             position: absolute;
-            left: -25px;
-            top: 5px;
-            width: 12px;
-            height: 12px;
+            left: -31px;
+            top: 3px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            background: #e94560;
-            border: 2px solid white;
+            background: #6c757d;
+            border: 3px solid white;
         }
-        
+
         .timeline-item.completed::before {
             background: #28a745;
         }
-        
+
         .timeline-item.current::before {
             background: #ffc107;
-            box-shadow: 0 0 10px #ffc107;
+            box-shadow: 0 0 12px #ffc107;
         }
-        
-        .status-badge {
-            background: #ffc107;
-            color: #1a1a2e;
-            padding: 5px 15px;
-            border-radius: 20px;
+
+        .timeline-item.denied::before {
+            background: #dc3545;
+        }
+
+        .timeline-title {
             font-weight: bold;
+            margin-bottom: 4px;
         }
-        
-        .search-box {
-            background: rgba(255,255,255,0.9);
-            border-radius: 30px;
-            padding: 10px 20px;
-            border: none;
-            color: #1a1a2e;
-            width: 100%;
+
+        .timeline-detail {
+            color: rgba(255,255,255,0.65);
+            font-size: 0.9rem;
+            margin-bottom: 0;
         }
-        
-        .btn-check {
-            background: #e94560;
-            color: white;
-            border: none;
-            border-radius: 30px;
-            padding: 10px 30px;
-            margin-top: 10px;
-            width: 100%;
+
+        .decision-card {
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
         }
-        
-        .btn-check:hover {
-            background: #c73e54;
+
+        .decision-approved {
+            background: rgba(40,167,69,0.15);
+            border: 1px solid #28a745;
         }
-        
-        .navbar {
-            background: rgba(0,0,0,0.8) !important;
+
+        .decision-denied {
+            background: rgba(220,53,69,0.15);
+            border: 1px solid #dc3545;
         }
-        
-        .navbar-brand {
-            font-weight: bold;
+
+        .security-note {
+            background: rgba(23,162,184,0.12);
+            border-left: 4px solid #17a2b8;
+            border-radius: 10px;
+            padding: 15px;
+            color: #cceff5;
+            font-size: 0.9rem;
         }
-        
-        .nav-link {
-            color: white !important;
-            margin-left: 15px;
-        }
-        
-        .nav-link:hover {
-            color: #e94560 !important;
+
+        @media (max-width: 768px) {
+            .status-page-container {
+                padding: 15px;
+            }
+
+            .status-main-card {
+                padding: 20px;
+            }
+
+            .status-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 12px;
+            }
         }
     </style>
 </head>
+
 <body>
 
 <!-- NAVIGATION -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+
     <div class="container">
-        <a class="navbar-brand" href="index.html"><strong>NamPol</strong> Recruitment</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        <a class="navbar-brand" href="index.html">
+            <strong>NamPol</strong> Recruitment
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+        >
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+
+        <div
+            class="collapse navbar-collapse"
+            id="navbarNav"
+        >
+
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
-                <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
-                <li class="nav-item"><a class="nav-link" href="admin_login.html">Admin</a></li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">
+                        Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="apply.html">
+                        New Application
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a
+                        id="logoutLink"
+                        class="nav-link"
+                        href="#"
+                    >
+                        Logout
+                    </a>
+                </li>
+
             </ul>
+
         </div>
+
     </div>
+
 </nav>
 
-<div class="container status-container">
+
+<!-- STATUS CONTENT -->
+
+<div class="container status-page-container">
+
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h2 class="text-center mb-4">Check Your Application Status</h2>
-            
-            <!-- Search Form -->
-            <div class="card mb-4" style="background: rgba(255,255,255,0.1);">
-                <div class="card-body">
+
+        <div class="col-xl-9 col-lg-10">
+
+            <div class="text-center mb-4">
+
+                <h2>
+                    Application Status
+                </h2>
+
+                <p class="text-white-50">
+                    Track the progress of your NamPol recruitment applications.
+                </p>
+
+            </div>
+
+
+            <!-- LOADING -->
+
+            <div
+                id="statusLoading"
+                class="status-main-card text-center"
+            >
+
+                <div
+                    class="spinner-border"
+                    role="status"
+                ></div>
+
+                <p class="mt-3 mb-0">
+                    Loading your applications...
+                </p>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <div
+                id="statusAlert"
+                class="alert alert-danger d-none"
+                role="alert"
+            ></div>
+
+
+            <!-- NO APPLICATION -->
+
+            <div
+                id="noApplication"
+                class="alert alert-info d-none"
+            >
+
+                <strong>No applications found.</strong>
+
+                You have not submitted an application yet.
+
+                <a
+                    href="apply.html"
+                    class="alert-link"
+                >
+                    Start a new application
+                </a>.
+
+            </div>
+
+
+            <!-- APPLICATION SELECTOR -->
+
+            <div
+                id="applicationSelectorContainer"
+                class="application-selector d-none"
+            >
+
+                <label
+                    for="applicationSelector"
+                    class="form-label"
+                >
+                    Select Application
+                </label>
+
+                <select
+                    id="applicationSelector"
+                    class="form-select"
+                >
+                </select>
+
+            </div>
+
+
+            <!-- STATUS CARD -->
+
+            <div
+                id="statusCard"
+                class="status-main-card d-none"
+            >
+
+                <div
+                    class="status-header d-flex justify-content-between align-items-center mb-4"
+                >
+
+                    <div>
+
+                        <div class="text-white-50 small">
+                            Application Reference
+                        </div>
+
+                        <h4
+                            id="applicationReference"
+                            class="application-reference mb-0"
+                        >
+                        </h4>
+
+                    </div>
+
+                    <span
+                        id="applicationStatus"
+                        class="status-pill"
+                    >
+                    </span>
+
+                </div>
+
+
+                <!-- APPLICATION INFORMATION -->
+
+                <div class="application-info">
+
                     <div class="row">
-                        <div class="col-md-8">
-                            <input type="text" class="search-box" placeholder="Enter your ID Number or Application Reference">
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Position Applied For
+                            </div>
+
+                            <div
+                                id="applicationPosition"
+                                class="info-value"
+                            >
+                                —
+                            </div>
+
                         </div>
-                        <div class="col-md-4 text-center">
-                            <button class="btn btn-check">Check Status</button>
+
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Station Preference
+                            </div>
+
+                            <div
+                                id="stationPreference"
+                                class="info-value"
+                            >
+                                —
+                            </div>
+
                         </div>
+
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Date Submitted
+                            </div>
+
+                            <div
+                                id="submittedDate"
+                                class="info-value"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Date Reviewed
+                            </div>
+
+                            <div
+                                id="reviewedDate"
+                                class="info-value"
+                            >
+                                Not reviewed
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Document Status
+                            </div>
+
+                            <div
+                                id="documentStatus"
+                                class="info-value"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Verification Status
+                            </div>
+
+                            <div
+                                id="verificationStatus"
+                                class="info-value"
+                            >
+                                —
+                            </div>
+
+                        </div>
+
                     </div>
+
                 </div>
+
+
+                <h5 class="mb-4">
+                    Application Timeline
+                </h5>
+
+
+                <div
+                    id="applicationTimeline"
+                    class="timeline"
+                >
+                </div>
+
+
+                <!-- DECISION -->
+
+                <div
+                    id="decisionDetails"
+                    class="decision-card d-none"
+                >
+
+                    <h5 id="decisionHeading"></h5>
+
+                    <p
+                        id="decisionReason"
+                        class="mb-2"
+                    ></p>
+
+                    <small
+                        id="decisionDate"
+                        class="text-white-50"
+                    ></small>
+
+                </div>
+
+
+                <div class="security-note mt-4">
+
+                    <strong>Security Notice:</strong>
+
+                    Recruitment information is displayed through your
+                    authenticated applicant account. Do not share your
+                    login credentials or application information with
+                    unauthorized persons.
+
+                </div>
+
             </div>
-            
-            <!-- Status Display (Example) -->
-            <div class="status-card">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4>Application Reference: <span style="color:#e94560">NAP-2026-04521</span></h4>
-                    <span class="status-badge">IN PROGRESS</span>
-                </div>
-                
-                <hr style="border-color: rgba(255,255,255,0.2)">
-                
-                <h5 class="mb-4">Application Timeline</h5>
-                
-                <div class="timeline">
-                    <div class="timeline-item completed">
-                        <h6>Application Submitted</h6>
-                        <p class="small text-white-50">15 April 2026 - 09:45 AM</p>
-                    </div>
-                    
-                    <div class="timeline-item completed">
-                        <h6>Documents Verified</h6>
-                        <p class="small text-white-50">18 April 2026 - 02:30 PM</p>
-                    </div>
-                    
-                    <div class="timeline-item current">
-                        <h6>Background Check In Progress</h6>
-                        <p class="small text-white-50">Current Stage - Estimated completion: 25 April 2026</p>
-                    </div>
-                    
-                    <div class="timeline-item">
-                        <h6>Physical Fitness Test</h6>
-                        <p class="small text-white-50">Pending - Date to be announced</p>
-                    </div>
-                    
-                    <div class="timeline-item">
-                        <h6>Interview</h6>
-                        <p class="small text-white-50">Pending - Date to be announced</p>
-                    </div>
-                    
-                    <div class="timeline-item">
-                        <h6>Final Decision</h6>
-                        <p class="small text-white-50">Pending</p>
-                    </div>
-                </div>
-            </div>
+
         </div>
+
     </div>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<footer class="text-white text-center py-3 mt-5">
+
+    <div class="container">
+
+        <p class="mb-0">
+            &copy; 2026 Namibian Police Force.
+            All rights reserved.
+        </p>
+
+        <p class="small mb-0">
+            Design &amp; Developed by Alma N Haihambo
+        </p>
+
+    </div>
+
+</footer>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+></script>
+
+
+<script type="module">
+
+import {
+    auth,
+    db
+} from "../js/firebase-config.js";
+
+
+import {
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+
+import {
+    collection,
+    getDocs,
+    query,
+    where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+
+const loading =
+    document.getElementById("statusLoading");
+
+const alertBox =
+    document.getElementById("statusAlert");
+
+const noApplication =
+    document.getElementById("noApplication");
+
+const statusCard =
+    document.getElementById("statusCard");
+
+const applicationSelectorContainer =
+    document.getElementById("applicationSelectorContainer");
+
+const applicationSelector =
+    document.getElementById("applicationSelector");
+
+const applicationTimeline =
+    document.getElementById("applicationTimeline");
+
+const decisionDetails =
+    document.getElementById("decisionDetails");
+
+
+let userApplications = [];
+
+
+const requestedReference =
+    new URLSearchParams(
+        window.location.search
+    ).get("application");
+
+
+
+function formatDate(timestamp) {
+
+    if (!timestamp) {
+        return "Not recorded";
+    }
+
+
+    try {
+
+        let date;
+
+
+        if (
+            typeof timestamp.toDate === "function"
+        ) {
+
+            date =
+                timestamp.toDate();
+
+        } else if (timestamp.seconds) {
+
+            date =
+                new Date(
+                    timestamp.seconds * 1000
+                );
+
+        } else {
+
+            date =
+                new Date(timestamp);
+        }
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return "Not recorded";
+        }
+
+
+        return date.toLocaleString(
+            "en-NA",
+            {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Date formatting error:",
+            error
+        );
+
+        return "Not recorded";
+    }
+}
+
+
+
+function normaliseStatus(status) {
+
+    const value =
+        String(status || "Submitted")
+            .trim()
+            .toLowerCase()
+            .replaceAll("_", " ");
+
+
+    if (value === "submitted") {
+        return "Submitted";
+    }
+
+
+    if (
+        value === "under review" ||
+        value === "in progress" ||
+        value === "pending"
+    ) {
+        return "Under Review";
+    }
+
+
+    if (
+        value === "approved" ||
+        value === "shortlisted"
+    ) {
+        return "Approved";
+    }
+
+
+    if (
+        value === "denied" ||
+        value === "rejected"
+    ) {
+        return "Denied";
+    }
+
+
+    return status || "Submitted";
+}
+
+
+
+function getStatusClass(status) {
+
+    const value =
+        normaliseStatus(status);
+
+
+    if (value === "Submitted") {
+        return "status-submitted";
+    }
+
+
+    if (value === "Under Review") {
+        return "status-review";
+    }
+
+
+    if (value === "Approved") {
+        return "status-approved";
+    }
+
+
+    if (value === "Denied") {
+        return "status-denied";
+    }
+
+
+    return "status-other";
+}
+
+
+
+function createTimelineItem(
+    title,
+    detail,
+    state = ""
+) {
+
+    const item =
+        document.createElement("div");
+
+
+    item.className =
+        `timeline-item ${state}`;
+
+
+    const heading =
+        document.createElement("div");
+
+
+    heading.className =
+        "timeline-title";
+
+
+    heading.textContent =
+        title;
+
+
+    const description =
+        document.createElement("p");
+
+
+    description.className =
+        "timeline-detail";
+
+
+    description.textContent =
+        detail;
+
+
+    item.append(
+        heading,
+        description
+    );
+
+
+    applicationTimeline.appendChild(
+        item
+    );
+}
+
+
+
+function renderTimeline(application) {
+
+    applicationTimeline.innerHTML = "";
+
+
+    const status =
+        normaliseStatus(
+            application.status
+        );
+
+
+    // -----------------------------------------
+    // STAGE 1: SUBMITTED
+    // -----------------------------------------
+
+    createTimelineItem(
+        "Application Submitted",
+        `Submitted on ${formatDate(
+            application.submittedAt
+        )}`,
+        "completed"
+    );
+
+
+    // -----------------------------------------
+    // STAGE 2: REVIEW
+    // -----------------------------------------
+
+    if (
+        status === "Under Review" ||
+        status === "Approved" ||
+        status === "Denied"
+    ) {
+
+        const reviewDate =
+            application.reviewStartedAt
+                ? formatDate(
+                    application.reviewStartedAt
+                )
+                : "Review process started";
+
+
+        createTimelineItem(
+            "Application Under Review",
+            reviewDate,
+            status === "Under Review"
+                ? "current"
+                : "completed"
+        );
+
+    } else {
+
+        createTimelineItem(
+            "Recruitment Review",
+            "Waiting for a recruitment officer to begin the review.",
+            "current"
+        );
+    }
+
+
+    // -----------------------------------------
+    // STAGE 3: FINAL DECISION
+    // -----------------------------------------
+
+    if (status === "Approved") {
+
+        createTimelineItem(
+            "Application Approved",
+            `Decision recorded on ${formatDate(
+                application.reviewedAt
+            )}`,
+            "completed"
+        );
+
+    } else if (status === "Denied") {
+
+        createTimelineItem(
+            "Application Denied",
+            `Decision recorded on ${formatDate(
+                application.reviewedAt
+            )}`,
+            "denied"
+        );
+
+    } else {
+
+        createTimelineItem(
+            "Final Decision",
+            "No final recruitment decision has been recorded yet.",
+            ""
+        );
+    }
+}
+
+
+
+function renderDecision(application) {
+
+    const status =
+        normaliseStatus(
+            application.status
+        );
+
+
+    if (
+        status !== "Approved" &&
+        status !== "Denied"
+    ) {
+
+        decisionDetails.classList.add(
+            "d-none"
+        );
+
+        return;
+    }
+
+
+    decisionDetails.classList.remove(
+        "d-none",
+        "decision-approved",
+        "decision-denied"
+    );
+
+
+    const heading =
+        document.getElementById(
+            "decisionHeading"
+        );
+
+
+    const reason =
+        document.getElementById(
+            "decisionReason"
+        );
+
+
+    const date =
+        document.getElementById(
+            "decisionDate"
+        );
+
+
+    if (status === "Approved") {
+
+        decisionDetails.classList.add(
+            "decision-approved"
+        );
+
+        heading.textContent =
+            "Application Approved";
+
+    } else {
+
+        decisionDetails.classList.add(
+            "decision-denied"
+        );
+
+        heading.textContent =
+            "Application Denied";
+    }
+
+
+    reason.textContent =
+        application.decisionReason
+        || "No additional decision information was provided.";
+
+
+    date.textContent =
+        application.reviewedAt
+            ? `Decision recorded: ${formatDate(
+                application.reviewedAt
+            )}`
+            : "Decision date not recorded.";
+}
+
+
+
+function renderApplication(application) {
+
+    const status =
+        normaliseStatus(
+            application.status
+        );
+
+
+    const reference =
+        application.applicationReference
+        || application.id;
+
+
+    document.getElementById(
+        "applicationReference"
+    ).textContent =
+        reference;
+
+
+    const statusElement =
+        document.getElementById(
+            "applicationStatus"
+        );
+
+
+    statusElement.textContent =
+        status.toUpperCase();
+
+
+    statusElement.className =
+        `status-pill ${getStatusClass(status)}`;
+
+
+    document.getElementById(
+        "applicationPosition"
+    ).textContent =
+        application.position
+        || "Not specified";
+
+
+    document.getElementById(
+        "stationPreference"
+    ).textContent =
+        application.stationPreference
+        || "Not specified";
+
+
+    document.getElementById(
+        "submittedDate"
+    ).textContent =
+        formatDate(
+            application.submittedAt
+        );
+
+
+    document.getElementById(
+        "reviewedDate"
+    ).textContent =
+        application.reviewedAt
+            ? formatDate(
+                application.reviewedAt
+            )
+            : "Not reviewed";
+
+
+    document.getElementById(
+        "documentStatus"
+    ).textContent =
+        application.documentsValidated === true
+            ? "Validated"
+            : "Pending";
+
+
+    document.getElementById(
+        "verificationStatus"
+    ).textContent =
+        application.verificationStatus
+        || "Pending";
+
+
+    renderTimeline(
+        application
+    );
+
+
+    renderDecision(
+        application
+    );
+
+
+    statusCard.classList.remove(
+        "d-none"
+    );
+}
+
+
+
+function populateApplicationSelector(
+    applications
+) {
+
+    applicationSelector.innerHTML = "";
+
+
+    applications.forEach(
+        application => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            const reference =
+                application.applicationReference
+                || application.id;
+
+
+            option.value =
+                reference;
+
+
+            option.textContent =
+                `${reference} — ${
+                    application.position
+                    || "Application"
+                }`;
+
+
+            applicationSelector.appendChild(
+                option
+            );
+        }
+    );
+
+
+    applicationSelectorContainer.classList.remove(
+        "d-none"
+    );
+}
+
+
+
+function selectInitialApplication() {
+
+    let selectedApplication;
+
+
+    if (requestedReference) {
+
+        selectedApplication =
+            userApplications.find(
+                application => {
+
+                    const reference =
+                        application.applicationReference
+                        || application.id;
+
+
+                    return (
+                        reference === requestedReference ||
+                        application.id === requestedReference
+                    );
+                }
+            );
+    }
+
+
+    if (!selectedApplication) {
+
+        selectedApplication =
+            userApplications[0];
+    }
+
+
+    if (!selectedApplication) {
+        return;
+    }
+
+
+    const selectedReference =
+        selectedApplication.applicationReference
+        || selectedApplication.id;
+
+
+    applicationSelector.value =
+        selectedReference;
+
+
+    renderApplication(
+        selectedApplication
+    );
+}
+
+
+
+applicationSelector.addEventListener(
+    "change",
+    () => {
+
+        const selected =
+            userApplications.find(
+                application => {
+
+                    const reference =
+                        application.applicationReference
+                        || application.id;
+
+
+                    return (
+                        reference ===
+                        applicationSelector.value
+                    );
+                }
+            );
+
+
+        if (selected) {
+
+            renderApplication(
+                selected
+            );
+
+
+            const reference =
+                selected.applicationReference
+                || selected.id;
+
+
+            const newUrl =
+                `${window.location.pathname}?application=${encodeURIComponent(
+                    reference
+                )}`;
+
+
+            window.history.replaceState(
+                {},
+                "",
+                newUrl
+            );
+        }
+    }
+);
+
+
+
+onAuthStateChanged(
+    auth,
+    async user => {
+
+        if (!user) {
+
+            window.location.href =
+                "login.html";
+
+            return;
+        }
+
+
+        if (!user.emailVerified) {
+
+            await signOut(auth);
+
+            window.location.href =
+                "login.html";
+
+            return;
+        }
+
+
+        try {
+
+            const applicationsQuery =
+                query(
+                    collection(
+                        db,
+                        "applications"
+                    ),
+
+                    where(
+                        "applicantId",
+                        "==",
+                        user.uid
+                    )
+                );
+
+
+            const snapshot =
+                await getDocs(
+                    applicationsQuery
+                );
+
+
+            userApplications =
+                snapshot.docs.map(
+                    documentSnapshot => ({
+
+                        id:
+                            documentSnapshot.id,
+
+                        ...documentSnapshot.data()
+                    })
+                );
+
+
+            // Newest first.
+            // Local sorting avoids requiring
+            // a compound Firestore index.
+
+            userApplications.sort(
+                (left, right) => {
+
+                    const rightTime =
+                        right.submittedAt?.seconds
+                        || 0;
+
+
+                    const leftTime =
+                        left.submittedAt?.seconds
+                        || 0;
+
+
+                    return (
+                        rightTime -
+                        leftTime
+                    );
+                }
+            );
+
+
+            loading.classList.add(
+                "d-none"
+            );
+
+
+            if (
+                userApplications.length === 0
+            ) {
+
+                noApplication.classList.remove(
+                    "d-none"
+                );
+
+                return;
+            }
+
+
+            populateApplicationSelector(
+                userApplications
+            );
+
+
+            selectInitialApplication();
+
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load application status:",
+                error
+            );
+
+
+            loading.classList.add(
+                "d-none"
+            );
+
+
+            alertBox.textContent =
+                "Unable to load your application status. Please try again.";
+
+
+            alertBox.classList.remove(
+                "d-none"
+            );
+        }
+    }
+);
+
+
+
+document.getElementById(
+    "logoutLink"
+).addEventListener(
+    "click",
+    async event => {
+
+        event.preventDefault();
+
+
+        try {
+
+            await signOut(auth);
+
+        } finally {
+
+            window.location.href =
+                "login.html";
+        }
+    }
+);
+
+</script>
+
 </body>
 </html>

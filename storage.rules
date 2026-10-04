@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function verifiedUser() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isActiveAdmin() {
+      return verifiedUser()
+        && firestore.exists(
+          /databases/(default)/documents/admins/$(request.auth.uid)
+        )
+        && firestore.get(
+          /databases/(default)/documents/admins/$(request.auth.uid)
+        ).data.active == true
+        && firestore.get(
+          /databases/(default)/documents/admins/$(request.auth.uid)
+        ).data.role in ['admin', 'recruiter', 'super_admin'];
+    }
+
+    function canReviewApplicant(uid) {
+      return isActiveAdmin()
+        && (
+          firestore.get(
+            /databases/(default)/documents/admins/$(request.auth.uid)
+          ).data.role == 'super_admin'
+          || firestore.get(
+            /databases/(default)/documents/admins/$(request.auth.uid)
+          ).data.region == firestore.get(
+            /databases/(default)/documents/users/$(uid)
+          ).data.region
+        );
+    }
+
+    match /applicantDocuments/{uid}/{documentType}/{fileName} {
+      allow read: if verifiedUser()
+        && (request.auth.uid == uid || canReviewApplicant(uid));
+      allow create, update: if verifiedUser()
+        && request.auth.uid == uid
+        && documentType in [
+          'cv',
+          'identification',
+          'qualification_certificate'
+        ]
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/pdf',
+          'image/jpeg',
+          'image/png'
+        ];
+      allow delete: if verifiedUser()
+        && (request.auth.uid == uid || canReviewApplicant(uid));
+    }
+  }
+}

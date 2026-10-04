@@ -1,815 +1,1770 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - NamPol Recruitment</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Admin Dashboard - NamPol Recruitment</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
     <style>
+
+        /* =====================================================
+           GENERAL
+        ===================================================== */
+
         body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            background: #f4f6f9;
             min-height: 100vh;
-            color: white;
-            padding-top: 80px;
         }
-        
-        .admin-container {
-            padding: 30px;
-        }
-        
-        .admin-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .stat-card {
-            text-align: center;
-            padding: 30px;
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #e94560;
-        }
-        
-        .stat-label {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            opacity: 0.8;
-        }
-        
-        .btn-admin {
-            background: #e94560;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: none;
-            font-size: 0.9rem;
-            margin: 2px;
-        }
-        
-        .btn-admin:hover {
-            background: #c73e54;
-            color: white;
-        }
-        
-        .btn-view {
-            background: #0f3460;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: none;
-            font-size: 0.9rem;
-            margin: 2px;
-        }
-        
-        .btn-view:hover {
-            background: #16213e;
-            color: white;
-        }
-        
-        .btn-logout {
-            background: #dc3545;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: none;
-            font-size: 0.9rem;
-            margin: 2px;
-            cursor: pointer;
-        }
-        
-        .btn-logout:hover {
-            background: #c82333;
-        }
-        
-        .status-pending {
-            background: #ffc107;
-            color: #1a1a2e;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .status-reviewed {
-            background: #17a2b8;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .status-shortlisted {
-            background: #28a745;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .status-rejected {
-            background: #dc3545;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .status-active {
-            background: #17a2b8;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .nav-pills .nav-link {
-            color: white;
-        }
-        
-        .nav-pills .nav-link.active {
-            background: #e94560;
-        }
-        
-        .nav-pills .nav-link:hover {
-            background: rgba(233,69,96,0.3);
-            color: white;
-        }
-        
+
+
+        /* =====================================================
+           NAVBAR
+        ===================================================== */
+
         .navbar {
-            background: rgba(0,0,0,0.8) !important;
+            background: #0f3460 !important;
         }
-        
+
         .navbar-brand {
             font-weight: bold;
         }
-        
-        .nav-link {
-            color: white !important;
-            margin-left: 15px;
-        }
-        
-        .nav-link:hover {
-            color: #e94560 !important;
-        }
-        
-        .admin-profile {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            margin-bottom: 15px;
-        }
-        
-        .admin-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
+
+        .admin-role-badge {
             background: #e94560;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background: #16213e;
+            color: white;
+            padding-top: 20px;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+        }
+
+        .sidebar .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar .nav-link.active {
+            background: #0f3460;
+            color: white;
+        }
+
+
+        /* =====================================================
+           MAIN CONTENT
+        ===================================================== */
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .welcome-card {
+            background: linear-gradient(
+                135deg,
+                #0f3460,
+                #16213e
+            );
+
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+
+        /* =====================================================
+           STAT CARDS
+        ===================================================== */
+
+        .stat-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0f3460;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+
+        /* =====================================================
+           ADMIN DETAILS
+        ===================================================== */
+
+        .admin-info-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .admin-info-row {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .admin-info-row:last-child {
+            border-bottom: none;
+        }
+
+
+        /* =====================================================
+           QUICK ACTIONS
+        ===================================================== */
+
+        .quick-action-card {
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .quick-action-icon {
+            font-size: 2rem;
+        }
+
+
+        /* =====================================================
+           LOADING SCREEN
+        ===================================================== */
+
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: #16213e;
+
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            margin-right: 15px;
-        }
-        
-        .region-badge {
-            background: #28a745;
+            flex-direction: column;
+
             color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
+
+            z-index: 9999;
         }
-        
-        .info-alert {
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid #e94560;
+
+
+        /* =====================================================
+           DASHBOARD
+        ===================================================== */
+
+        #dashboardContent {
+            display: none;
         }
-        
-        .activity-icon {
-            font-size: 1.2rem;
-            margin-right: 10px;
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 768px) {
+
+            .sidebar {
+                min-height: auto;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
         }
-        
-        .table thead th {
-            background: rgba(0,0,0,0.3);
-            border: none;
-        }
-        
-        .table tbody tr:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .search-bar {
-            background: rgba(255,255,255,0.9);
-            border-radius: 30px;
-            padding: 10px 20px;
-            border: none;
-            color: #1a1a2e;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        .admin-code {
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            display: inline-block;
-        }
-        
-        .login-time {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.6);
-            margin-top: 10px;
-        }
-        
-        #adminTabs .nav-link {
-            font-size: 0.9rem;
-        }
+
     </style>
+
 </head>
+
+
 <body>
 
-<!-- NAVIGATION -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container">
-        <a class="navbar-brand" href="admin.html"><strong>NamPol</strong> Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="admin.html">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="logout()">Logout</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
 
-<!-- ADMIN CONTENT -->
-<div class="container admin-container">
-    <!-- Admin Profile -->
-    <div class="admin-card">
-        <div class="admin-profile">
-            <div class="admin-avatar">👮</div>
-            <div>
-                <h5 class="mb-0" id="adminName">Recruitment Officer</h5>
-                <small class="text-white-50">NamPol HR Department</small>
-            </div>
-            <div class="ms-auto text-end">
-                <span class="region-badge" id="currentRegion">Khomas Region</span>
-                <br>
-                <small class="text-white-50" id="adminCodeDisplay">Code: NAMPOL-KHOMAS-001</small>
-            </div>
-        </div>
-        
-        <div class="d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Regional Recruitment Dashboard</h4>
-            <button class="btn btn-admin">+ New Vacancy</button>
-        </div>
-        
-        <div class="login-time" id="loginTime">
-            <small>📅 Logged in: </small>
-        </div>
+<!-- =========================================================
+     SECURITY / LOADING SCREEN
+========================================================= -->
+
+<div id="loadingScreen">
+
+    <div
+        class="spinner-border text-light mb-3"
+        role="status"
+    >
+        <span class="visually-hidden">
+            Loading...
+        </span>
     </div>
-    
-    <!-- Info Alert -->
-    <div class="info-alert">
-        <small>
-            <strong>ℹ️ Regional Admin:</strong> You are logged in as the admin for <strong id="regionName">Khomas Region</strong>.
-            You have access to all activities in your region only.
-        </small>
-    </div>
-    
-    <!-- Stats Row -->
-    <div class="row">
-        <div class="col-md-3">
-            <div class="admin-card stat-card">
-                <div class="stat-number" id="totalRegistrations">1,250</div>
-                <div class="stat-label">Registered Applicants</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="admin-card stat-card">
-                <div class="stat-number" id="totalApplications">5,200</div>
-                <div class="stat-label">Applications Received</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="admin-card stat-card">
-                <div class="stat-number" id="activeLogins">890</div>
-                <div class="stat-label">Active Logins</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="admin-card stat-card">
-                <div class="stat-number" id="pendingReview">150</div>
-                <div class="stat-label">Pending Review</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Regional Admins Table -->
-    <div class="admin-card">
-        <h4 class="mb-3">Regional Admins (14 Total)</h4>
-        
-        <div class="table-responsive">
-            <table class="table table-dark table-hover">
-                <thead>
-                    <tr>
-                        <th>Region</th>
-                        <th>Admin Code</th>
-                        <th>Status</th>
-                        <th>Applications</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Khomas</td>
-                        <td><span class="admin-code">NAMPOL-KHOMAS-001</span></td>
-                        <td><span class="status-shortlisted">Active</span></td>
-                        <td>5,200</td>
-                    </tr>
-                    <tr>
-                        <td>Ohangwena</td>
-                        <td><span class="admin-code">NAMPOL-OHANGWENA-002</span></td>
-                        <td><span class="status-shortlisted">Active</span></td>
-                        <td>3,800</td>
-                    </tr>
-                    <tr>
-                        <td>Omusati</td>
-                        <td><span class="admin-code">NAMPOL-OMUSATI-003</span></td>
-                        <td><span class="status-shortlisted">Active</span></td>
-                        <td>4,100</td>
-                    </tr>
-                    <tr>
-                        <td>Oshana</td>
-                        <td><span class="admin-code">NAMPOL-OSHANA-004</span></td>
-                        <td><span class="status-shortlisted">Active</span></td>
-                        <td>3,500</td>
-                    </tr>
-                    <tr>
-                        <td>Oshikoto</td>
-                        <td><span class="admin-code">NAMPOL-OSHIKOTO-005</span></td>
-                        <td><span class="status-shortlisted">Active</span></td>
-                        <td>3,200</td>
-                    </tr>
-                    <tr>
-                        <td>Otjozondjupa</td>
-                        <td><span class="admin-code">NAMPOL-OTJOZONDJUPA-006</span></td>
-                        <td><span class="status-shortlisted">Active</span></td>
-                        <td>2,800</td>
-                    </tr>
-                    <tr>
-                        <td>Erongo</td>
-                        <td><span class="admin-code">NAMPOL-ERONGO-007</span></td>
-                        <td><span class="status-shortlisted">Active</span></td>
-                        <td>2,500</td>
-                    </tr>
-                    <tr>
-                        <td>Hardap</td>
-                        <td><span class="admin-code">NAMPOL-HARDAP-008</span></td>
-                        <td><span class="status-reviewed">Active</span></td>
-                        <td>1,800</td>
-                    </tr>
-                    <tr>
-                        <td>Karas</td>
-                        <td><span class="admin-code">NAMPOL-KARAS-009</span></td>
-                        <td><span class="status-reviewed">Active</span></td>
-                        <td>1,500</td>
-                    </tr>
-                    <tr>
-                        <td>Kavango East</td>
-                        <td><span class="admin-code">NAMPOL-KAVANGO-EAST-010</span></td>
-                        <td><span class="status-reviewed">Active</span></td>
-                        <td>2,100</td>
-                    </tr>
-                    <tr>
-                        <td>Kavango West</td>
-                        <td><span class="admin-code">NAMPOL-KAVANGO-WEST-011</span></td>
-                        <td><span class="status-pending">Active</span></td>
-                        <td>1,300</td>
-                    </tr>
-                    <tr>
-                        <td>Zambezi</td>
-                        <td><span class="admin-code">NAMPOL-ZAMBEZI-012</span></td>
-                        <td><span class="status-pending">Active</span></td>
-                        <td>1,200</td>
-                    </tr>
-                    <tr>
-                        <td>Kunene</td>
-                        <td><span class="admin-code">NAMPOL-KUNENE-013</span></td>
-                        <td><span class="status-pending">Active</span></td>
-                        <td>900</td>
-                    </tr>
-                    <tr>
-                        <td>Omaheke</td>
-                        <td><span class="admin-code">NAMPOL-OMAHEKE-014</span></td>
-                        <td><span class="status-pending">Active</span></td>
-                        <td>800</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- Search Bar -->
-    <div class="admin-card">
-        <input type="text" class="search-bar" placeholder="🔍 Search by name, ID, application ID...">
-    </div>
-    
-    <!-- Tabs Navigation -->
-    <div class="admin-card">
-        <ul class="nav nav-pills mb-3" id="adminTabs">
-            <li class="nav-item">
-                <a class="nav-link active" href="#registrations" data-bs-toggle="tab">📝 Registrations</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#logins" data-bs-toggle="tab">🔑 Logins</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#applications" data-bs-toggle="tab">📋 Applications</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#activity" data-bs-toggle="tab">📊 Activity Log</a>
-            </li>
-        </ul>
-        
-        <div class="tab-content">
-            <!-- REGISTRATIONS TAB -->
-            <div class="tab-pane fade show active" id="registrations">
-                <h5 class="mb-3">Recent Registrations in Your Region</h5>
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>ID Number</th>
-                                <th>Email</th>
-                                <th>Region</th>
-                                <th>Registered Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>John Doe</td>
-                                <td>97012345678</td>
-                                <td>john.doe@email.com</td>
-                                <td>Khomas</td>
-                                <td>15 April 2026 - 09:45 AM</td>
-                            </tr>
-                            <tr>
-                                <td>Jane Smith</td>
-                                <td>98023456789</td>
-                                <td>jane.smith@email.com</td>
-                                <td>Khomas</td>
-                                <td>15 April 2026 - 10:30 AM</td>
-                            </tr>
-                            <tr>
-                                <td>Peter Johnson</td>
-                                <td>99034567890</td>
-                                <td>peter.j@email.com</td>
-                                <td>Khomas</td>
-                                <td>14 April 2026 - 02:15 PM</td>
-                            </tr>
-                            <tr>
-                                <td>Maria Nangolo</td>
-                                <td>20001234567</td>
-                                <td>maria.n@email.com</td>
-                                <td>Khomas</td>
-                                <td>14 April 2026 - 03:00 PM</td>
-                            </tr>
-                            <tr>
-                                <td>David Uirab</td>
-                                <td>98012345678</td>
-                                <td>david.u@email.com</td>
-                                <td>Khomas</td>
-                                <td>13 April 2026 - 11:20 AM</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- LOGINS TAB -->
-            <div class="tab-pane fade" id="logins">
-                <h5 class="mb-3">Login Activity in Your Region</h5>
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Login Time</th>
-                                <th>IP Address</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>John Doe</td>
-                                <td>john.doe@email.com</td>
-                                <td>15 April 2026 - 09:50 AM</td>
-                                <td>192.168.1.101</td>
-                                <td><span class="status-active">Successful</span></td>
-                            </tr>
-                            <tr>
-                                <td>Jane Smith</td>
-                                <td>jane.smith@email.com</td>
-                                <td>15 April 2026 - 10:35 AM</td>
-                                <td>192.168.1.102</td>
-                                <td><span class="status-active">Successful</span></td>
-                            </tr>
-                            <tr>
-                                <td>Peter Johnson</td>
-                                <td>peter.j@email.com</td>
-                                <td>14 April 2026 - 02:20 PM</td>
-                                <td>192.168.1.103</td>
-                                <td><span class="status-active">Successful</span></td>
-                            </tr>
-                            <tr>
-                                <td>Unknown User</td>
-                                <td>test@fake.com</td>
-                                <td>14 April 2026 - 03:30 PM</td>
-                                <td>203.0.113.50</td>
-                                <td><span class="status-rejected">Failed</span></td>
-                            </tr>
-                            <tr>
-                                <td>Maria Nangolo</td>
-                                <td>maria.n@email.com</td>
-                                <td>14 April 2026 - 03:05 PM</td>
-                                <td>192.168.1.104</td>
-                                <td><span class="status-active">Successful</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- APPLICATIONS TAB -->
-            <div class="tab-pane fade" id="applications">
-                <h5 class="mb-3">All Applications in Your Region</h5>
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th>Application ID</th>
-                                <th>Applicant</th>
-                                <th>Position</th>
-                                <th>Date Submitted</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>NAP-2026-04521</td>
-                                <td>John Doe</td>
-                                <td>Police Constable</td>
-                                <td>15 April 2026</td>
-                                <td><span class="status-pending">Pending</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                    <a href="#" class="btn btn-admin">Shortlist</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>NAP-2026-04520</td>
-                                <td>Jane Smith</td>
-                                <td>Sergeant</td>
-                                <td>14 April 2026</td>
-                                <td><span class="status-shortlisted">Shortlisted</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                    <a href="#" class="btn btn-admin">Schedule</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>NAP-2026-04519</td>
-                                <td>Peter Johnson</td>
-                                <td>Inspector</td>
-                                <td>14 April 2026</td>
-                                <td><span class="status-reviewed">Reviewed</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                    <a href="#" class="btn btn-admin">Shortlist</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>NAP-2026-04518</td>
-                                <td>Maria Nangolo</td>
-                                <td>Police Constable</td>
-                                <td>13 April 2026</td>
-                                <td><span class="status-rejected">Rejected</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>NAP-2026-04517</td>
-                                <td>David Uirab</td>
-                                <td>Sergeant</td>
-                                <td>12 April 2026</td>
-                                <td><span class="status-pending">Pending</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                    <a href="#" class="btn btn-admin">Shortlist</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>NAP-2026-04516</td>
-                                <td>Anna Shikongo</td>
-                                <td>Police Constable</td>
-                                <td>11 April 2026</td>
-                                <td><span class="status-pending">Pending</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                    <a href="#" class="btn btn-admin">Shortlist</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>NAP-2026-04515</td>
-                                <td>Musa Kavari</td>
-                                <td>Police Constable</td>
-                                <td>11 April 2026</td>
-                                <td><span class="status-shortlisted">Shortlisted</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                    <a href="#" class="btn btn-admin">Schedule</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>NAP-2026-04514</td>
-                                <td>Elena Nakale</td>
-                                <td>Inspector</td>
-                                <td>10 April 2026</td>
-                                <td><span class="status-shortlisted">Shortlisted</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-view">View</a>
-                                    <a href="#" class="btn btn-admin">Schedule</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- ACTIVITY LOG TAB -->
-            <div class="tab-pane fade" id="activity">
-                <h5 class="mb-3">All Activity in Your Region</h5>
-                
-                <div class="list-group">
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">📝</span>
-                        <strong>New Registration:</strong> John Doe registered
-                        <span class="float-end text-white-50">15 April 2026 - 09:45 AM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">🔑</span>
-                        <strong>User Login:</strong> John Doe logged in
-                        <span class="float-end text-white-50">15 April 2026 - 09:50 AM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">📋</span>
-                        <strong>Application Submitted:</strong> John Doe applied for Police Constable
-                        <span class="float-end text-white-50">15 April 2026 - 10:15 AM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">📝</span>
-                        <strong>New Registration:</strong> Jane Smith registered
-                        <span class="float-end text-white-50">15 April 2026 - 10:30 AM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">🔑</span>
-                        <strong>User Login:</strong> Jane Smith logged in
-                        <span class="float-end text-white-50">15 April 2026 - 10:35 AM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">📋</span>
-                        <strong>Application Submitted:</strong> Jane Smith applied for Sergeant
-                        <span class="float-end text-white-50">15 April 2026 - 11:00 AM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">🔑</span>
-                        <strong>Failed Login Attempt:</strong> Unknown user tried to login
-                        <span class="float-end text-white-50">14 April 2026 - 03:30 PM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">📋</span>
-                        <strong>Application Reviewed:</strong> Peter Johnson's application reviewed
-                        <span class="float-end text-white-50">14 April 2026 - 04:00 PM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">✅</span>
-                        <strong>Application Shortlisted:</strong> Jane Smith shortlisted for Sergeant
-                        <span class="float-end text-white-50">14 April 2026 - 04:30 PM</span>
-                    </div>
-                    <div class="list-group-item bg-dark text-white">
-                        <span class="activity-icon">❌</span>
-                        <strong>Application Rejected:</strong> Maria Nangolo rejected
-                        <span class="float-end text-white-50">14 April 2026 - 05:00 PM</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
+    <h5>
+        Verifying Administrator Access
+    </h5>
+
+    <small class="text-white-50">
+        Please wait...
+    </small>
+
 </div>
 
-<!-- FOOTER -->
-<footer class="bg-dark text-white text-center py-3 mt-5">
-    <div class="container">
-        <p class="mb-0">&copy; 2026 Namibian Police Force. All rights reserved.</p>
-        <p class="small">Design & Developed by Alma N Haihambo</p>
-    </div>
-</footer>
 
-<script>
-    // Check if admin is logged in
-    window.onload = function() {
-        const isLoggedIn = localStorage.getItem('isAdminLoggedIn');
-        
-        if (isLoggedIn !== 'true') {
-            // Not logged in - redirect to admin login
-            window.location.href = 'admin_login.html';
-            return;
-        }
-        
-        // Get admin info from localStorage
-        const staffId = localStorage.getItem('adminStaffId') || 'Recruitment Officer';
-        const region = localStorage.getItem('adminRegion') || 'Khomas';
-        const adminCode = localStorage.getItem('adminCode') || 'NAMPOL-KHOMAS-001';
-        
-        // Update admin profile
-        document.getElementById('adminName').textContent = staffId;
-        document.getElementById('currentRegion').textContent = region + ' Region';
-        document.getElementById('regionName').textContent = region + ' Region';
-        document.getElementById('adminCodeDisplay').textContent = 'Code: ' + adminCode;
-        
-        // Set login time
-        const now = new Date();
-        const dateStr = now.toLocaleString();
-        document.getElementById('loginTime').innerHTML = '<small>📅 Logged in: ' + dateStr + '</small>';
-        
-        // Update stats based on region
-        const regionStats = {
-            'Khomas': { registrations: 1250, applications: 5200, logins: 890, pending: 150 },
-            'Ohangwena': { registrations: 850, applications: 3800, logins: 620, pending: 120 },
-            'Omusati': { registrations: 900, applications: 4100, logins: 680, pending: 130 },
-            'Oshana': { registrations: 780, applications: 3500, logins: 550, pending: 100 },
-            'Oshikoto': { registrations: 720, applications: 3200, logins: 510, pending: 90 },
-            'Otjozondjupa': { registrations: 650, applications: 2800, logins: 480, pending: 80 },
-            'Erongo': { registrations: 580, applications: 2500, logins: 420, pending: 70 },
-            'Hardap': { registrations: 420, applications: 1800, logins: 310, pending: 50 },
-            'Karas': { registrations: 350, applications: 1500, logins: 260, pending: 40 },
-            'Kavango East': { registrations: 480, applications: 2100, logins: 350, pending: 60 },
-            'Kavango West': { registrations: 300, applications: 1300, logins: 220, pending: 30 },
-            'Zambezi': { registrations: 280, applications: 1200, logins: 200, pending: 25 },
-            'Kunene': { registrations: 210, applications: 900, logins: 150, pending: 20 },
-            'Omaheke': { registrations: 180, applications: 800, logins: 130, pending: 15 }
-        };
-        
-        const stats = regionStats[region] || regionStats['Khomas'];
-        
-        // Update stats display
-        document.getElementById('totalRegistrations').textContent = stats.registrations.toLocaleString();
-        document.getElementById('totalApplications').textContent = stats.applications.toLocaleString();
-        document.getElementById('activeLogins').textContent = stats.logins.toLocaleString();
-        document.getElementById('pendingReview').textContent = stats.pending.toLocaleString();
-    };
-    
-    // Logout function
-    function logout() {
-        // Clear all admin session data
-        localStorage.removeItem('isAdminLoggedIn');
-        localStorage.removeItem('adminStaffId');
-        localStorage.removeItem('adminRegion');
-        localStorage.removeItem('adminCode');
-        
-        // Redirect to admin login
-        window.location.href = 'admin_login.html';
+
+<!-- =========================================================
+     DASHBOARD
+========================================================= -->
+
+<div id="dashboardContent">
+
+
+    <!-- =====================================================
+         NAVBAR
+    ====================================================== -->
+
+    <nav class="navbar navbar-dark navbar-expand-lg">
+
+        <div class="container-fluid">
+
+            <a
+                class="navbar-brand"
+                href="admin.html"
+            >
+                NamPol Recruitment
+            </a>
+
+
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#adminNavbar"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+
+            <div
+                class="collapse navbar-collapse"
+                id="adminNavbar"
+            >
+
+                <div
+                    class="ms-auto d-flex align-items-center gap-3"
+                >
+
+                    <span
+                        class="text-white d-none d-md-inline"
+                        id="navbarAdminName"
+                    >
+                        Administrator
+                    </span>
+
+
+                    <span
+                        class="admin-role-badge"
+                        id="navbarAdminRole"
+                    >
+                        ADMIN
+                    </span>
+
+
+                    <button
+                        class="btn btn-outline-light btn-sm"
+                        id="logoutBtn"
+                    >
+                        Logout
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         PAGE LAYOUT
+    ====================================================== -->
+
+    <div class="container-fluid">
+
+        <div class="row">
+
+
+            <!-- =================================================
+                 SIDEBAR
+            ================================================== -->
+
+            <div
+                class="col-md-2 col-lg-2 sidebar"
+            >
+
+                <nav class="nav flex-column px-2">
+
+
+                    <a
+                        class="nav-link active"
+                        href="admin.html"
+                    >
+                        🏠 Dashboard
+                    </a>
+
+
+                    <a
+                        class="nav-link"
+                        href="#"
+                        id="applicationsMenu"
+                    >
+                        📄 Applications
+                    </a>
+
+
+                    <a
+                        class="nav-link"
+                        href="#"
+                        id="vacanciesMenu"
+                    >
+                        💼 Vacancies
+                    </a>
+
+
+                    <a
+                        class="nav-link"
+                        href="#"
+                        id="verificationMenu"
+                    >
+                        🔎 Verification
+                    </a>
+
+
+                    <a
+                        class="nav-link"
+                        href="#"
+                        id="documentsMenu"
+                    >
+                        📁 Documents
+                    </a>
+
+
+                    <a
+                        class="nav-link"
+                        href="#"
+                        id="auditMenu"
+                    >
+                        🛡️ Audit Logs
+                    </a>
+
+
+                    <hr
+                        style="
+                            border-color:
+                            rgba(255,255,255,0.2);
+                        "
+                    >
+
+
+                    <small
+                        class="text-white-50 px-3"
+                    >
+                        Logged in as
+                    </small>
+
+
+                    <div class="px-3 mt-2">
+
+                        <strong id="sidebarStaffNumber">
+                            -
+                        </strong>
+
+                        <br>
+
+                        <small
+                            class="text-white-50"
+                            id="sidebarRegion"
+                        >
+                            -
+                        </small>
+
+                    </div>
+
+
+                </nav>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 MAIN CONTENT
+            ================================================== -->
+
+            <main
+                class="col-md-10 col-lg-10 main-content"
+            >
+
+
+                <!-- =============================================
+                     WELCOME
+                ============================================== -->
+
+                <div class="welcome-card">
+
+                    <h2>
+                        Welcome,
+                        <span id="welcomeName">
+                            Administrator
+                        </span>
+                    </h2>
+
+
+                    <p class="mb-1">
+
+                        Namibian Police Force
+                        Recruitment Administration Portal
+
+                    </p>
+
+
+                    <small>
+
+                        <span id="welcomeUnit">
+                            Unit
+                        </span>
+
+                        •
+
+                        <span id="welcomeRegion">
+                            Region
+                        </span>
+
+                    </small>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     STATISTICS
+                ============================================== -->
+
+                <div class="row g-4 mb-4">
+
+
+                    <!-- Total Applications -->
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div class="card stat-card h-100">
+
+                            <div class="card-body">
+
+                                <div class="stat-number"
+                                     id="totalApplications">
+
+                                    0
+
+                                </div>
+
+                                <div class="stat-label">
+
+                                    Total Applications
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Pending -->
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div class="card stat-card h-100">
+
+                            <div class="card-body">
+
+                                <div class="stat-number"
+                                     id="pendingApplications">
+
+                                    0
+
+                                </div>
+
+                                <div class="stat-label">
+
+                                    Pending Review
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Shortlisted -->
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div class="card stat-card h-100">
+
+                            <div class="card-body">
+
+                                <div class="stat-number"
+                                     id="shortlistedApplications">
+
+                                    0
+
+                                </div>
+
+                                <div class="stat-label">
+
+                                    Approved
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Users -->
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div class="card stat-card h-100">
+
+                            <div class="card-body">
+
+                                <div class="stat-number"
+                                     id="registeredUsers">
+
+                                    0
+
+                                </div>
+
+                                <div class="stat-label">
+
+                                    Registered Applicants
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <section class="card mb-4" id="applicationReviewSection">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">Applications for Review</h4>
+                            <button class="btn btn-outline-primary btn-sm" id="refreshApplicationsBtn">
+                                Refresh
+                            </button>
+                        </div>
+                        <div id="adminAlert" class="alert d-none" role="alert"></div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Applicant</th>
+                                        <th>Position</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                        <th>Documents</th>
+                                        <th>Decision and Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminApplicationsBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            Loading applications...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card mb-4 d-none" id="auditTrailSection">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">Audit Trail</h4>
+                            <button class="btn btn-outline-primary btn-sm" id="refreshAuditBtn">
+                                Refresh
+                            </button>
+                        </div>
+                        <div id="auditTrailMessage" class="alert d-none" role="alert"></div>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>When</th>
+                                        <th>Action</th>
+                                        <th>Actor</th>
+                                        <th>Application / User</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditTrailBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            Select Audit Logs to load events.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- =============================================
+                     QUICK ACTIONS
+                ============================================== -->
+
+                <h4 class="mb-3">
+                    Quick Actions
+                </h4>
+
+
+                <div class="row g-4 mb-4">
+
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div
+                            class="card quick-action-card h-100"
+                            id="viewApplicationsCard"
+                        >
+
+                            <div class="card-body text-center">
+
+                                <div class="quick-action-icon">
+                                    📄
+                                </div>
+
+                                <h6 class="mt-3">
+                                    Review Applications
+                                </h6>
+
+                                <small class="text-muted">
+                                    View submitted recruitment applications.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div
+                            class="card quick-action-card h-100"
+                            id="manageVacanciesCard"
+                        >
+
+                            <div class="card-body text-center">
+
+                                <div class="quick-action-icon">
+                                    💼
+                                </div>
+
+                                <h6 class="mt-3">
+                                    Manage Vacancies
+                                </h6>
+
+                                <small class="text-muted">
+                                    Create and manage recruitment vacancies.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div
+                            class="card quick-action-card h-100"
+                            id="verificationCard"
+                        >
+
+                            <div class="card-body text-center">
+
+                                <div class="quick-action-icon">
+                                    🔎
+                                </div>
+
+                                <h6 class="mt-3">
+                                    Verify Applicants
+                                </h6>
+
+                                <small class="text-muted">
+                                    Review applicant verification information.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="col-md-6 col-lg-3">
+
+                        <div
+                            class="card quick-action-card h-100"
+                            id="auditCard"
+                        >
+
+                            <div class="card-body text-center">
+
+                                <div class="quick-action-icon">
+                                    🛡️
+                                </div>
+
+                                <h6 class="mt-3">
+                                    Audit Logs
+                                </h6>
+
+                                <small class="text-muted">
+                                    Review important system activity.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     ADMINISTRATOR DETAILS
+                ============================================== -->
+
+                <div class="card admin-info-card">
+
+                    <div class="card-body">
+
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-3"
+                        >
+
+                            <div>
+
+                                <h5 class="mb-1">
+                                    Administrator Information
+                                </h5>
+
+                                <small class="text-muted">
+                                    Verified account information
+                                </small>
+
+                            </div>
+
+
+                            <span
+                                class="badge bg-success"
+                                id="accountStatus"
+                            >
+                                ACTIVE
+                            </span>
+
+                        </div>
+
+
+                        <div class="admin-info-row">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <strong>
+                                        Name
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="col-md-8"
+                                    id="adminFullName"
+                                >
+                                    -
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="admin-info-row">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <strong>
+                                        Staff Number
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="col-md-8"
+                                    id="adminStaffNumber"
+                                >
+                                    -
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="admin-info-row">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <strong>
+                                        Official Email
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="col-md-8"
+                                    id="adminEmail"
+                                >
+                                    -
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="admin-info-row">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <strong>
+                                        Role
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="col-md-8"
+                                    id="adminRole"
+                                >
+                                    -
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="admin-info-row">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <strong>
+                                        Unit
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="col-md-8"
+                                    id="adminUnit"
+                                >
+                                    -
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="admin-info-row">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <strong>
+                                        Region
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="col-md-8"
+                                    id="adminRegion"
+                                >
+                                    -
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+            </main>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     FIREBASE ADMIN JAVASCRIPT
+========================================================= -->
+
+<script type="module">
+
+    import {
+        protectAdminPage,
+        adminLogout,
+        getRegionalStats,
+        getAdminApplications,
+        getAdminAuditEvents,
+        reviewApplication,
+        recordDocumentAccess
+    } from "../js/admin.js";
+    import { db } from "../js/firebase-config.js";
+    import {
+        doc,
+        getDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFileUrl } from "../js/storage.js";
+
+
+    // ========================================================
+    // ELEMENTS
+    // ========================================================
+
+    const loadingScreen =
+        document.getElementById(
+            "loadingScreen"
+        );
+
+
+    const dashboardContent =
+        document.getElementById(
+            "dashboardContent"
+        );
+
+
+    const logoutButton =
+        document.getElementById(
+            "logoutBtn"
+        );
+
+    const applicationsBody =
+        document.getElementById("adminApplicationsBody");
+    const adminAlert =
+        document.getElementById("adminAlert");
+    const auditTrailSection =
+        document.getElementById("auditTrailSection");
+    const auditTrailBody =
+        document.getElementById("auditTrailBody");
+    const auditTrailMessage =
+        document.getElementById("auditTrailMessage");
+    let currentAdmin = null;
+
+
+    function showMessage(element, message, type = "danger") {
+        element.className = `alert alert-${type}`;
+        element.textContent = message;
+        element.classList.remove("d-none");
     }
+
+
+    function formatTimestamp(timestamp) {
+        if (!timestamp) {
+            return "Not available";
+        }
+        const date = typeof timestamp.toDate === "function"
+            ? timestamp.toDate()
+            : new Date(timestamp.seconds
+                ? timestamp.seconds * 1000
+                : timestamp);
+        return Number.isNaN(date.getTime())
+            ? "Not available"
+            : date.toLocaleString();
+    }
+
+
+    function addTextCell(row, value) {
+        const cell = document.createElement("td");
+        cell.textContent = value || "—";
+        row.appendChild(cell);
+        return cell;
+    }
+
+
+    async function showApplicantDocuments(application, button, container) {
+        button.disabled = true;
+        button.textContent = "Loading...";
+        container.replaceChildren();
+
+        try {
+            const snapshot = await getDoc(
+                doc(db, "applicantDocuments", application.applicantId)
+            );
+            if (!snapshot.exists()) {
+                container.textContent = "No uploaded documents were found.";
+                return;
+            }
+
+            const documents = snapshot.data();
+            await recordDocumentAccess(
+                currentAdmin,
+                application.applicantId,
+                application.region
+            );
+            for (const [key, label] of [
+                ["cv", "CV"],
+                ["identification", "Identification"],
+                ["certificate", "Qualification certificate"]
+            ]) {
+                const file = documents[key];
+                if (!file?.storagePath) {
+                    continue;
+                }
+
+                const result = await getFileUrl(file.storagePath);
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+
+                const link = document.createElement("a");
+                link.href = result.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.className = "d-block";
+                link.textContent = `Open ${label}: ${file.fileName || label}`;
+                container.appendChild(link);
+            }
+
+            if (!container.childElementCount) {
+                container.textContent = "No uploaded documents were found.";
+            }
+        } catch (error) {
+            console.error("Unable to load applicant documents:", error);
+            container.textContent =
+                "Unable to open documents. Check Storage rules and try again.";
+        } finally {
+            button.disabled = false;
+            button.textContent = "Show documents";
+        }
+    }
+
+
+    async function loadApplications() {
+        adminAlert.classList.add("d-none");
+        applicationsBody.replaceChildren();
+
+        try {
+            const applications =
+                await getAdminApplications(currentAdmin);
+
+            if (!applications.length) {
+                const row = document.createElement("tr");
+                const cell = addTextCell(
+                    row,
+                    "No applications have been submitted in your review scope."
+                );
+                cell.colSpan = 6;
+                cell.className = "text-center text-muted";
+                applicationsBody.appendChild(row);
+                return;
+            }
+
+            for (const application of applications) {
+                const row = document.createElement("tr");
+                addTextCell(
+                    row,
+                    `${application.applicantName || "Applicant"}\n${application.applicantEmail || ""}`
+                );
+                addTextCell(row, application.position);
+                addTextCell(row, formatTimestamp(application.submittedAt));
+                addTextCell(row, application.status || "Submitted");
+
+                const documentCell = document.createElement("td");
+                const documentButton = document.createElement("button");
+                documentButton.type = "button";
+                documentButton.className = "btn btn-outline-secondary btn-sm";
+                documentButton.textContent = "Show documents";
+                const documentLinks = document.createElement("div");
+                documentLinks.className = "mt-2";
+                documentButton.addEventListener("click", () => {
+                    showApplicantDocuments(
+                        application,
+                        documentButton,
+                        documentLinks
+                    );
+                });
+                documentCell.append(documentButton, documentLinks);
+                row.appendChild(documentCell);
+
+                const decisionCell = document.createElement("td");
+                const status = String(application.status || "Submitted")
+                    .trim()
+                    .toLowerCase();
+                if (
+                    ["approved", "denied", "rejected", "shortlisted"]
+                        .includes(status)
+                ) {
+                    decisionCell.textContent =
+                        `Final decision${application.decisionReason
+                            ? `: ${application.decisionReason}`
+                            : ""}`;
+                } else {
+                    const reason = document.createElement("textarea");
+                    reason.className = "form-control form-control-sm mb-2";
+                    reason.rows = 2;
+                    reason.maxLength = 1000;
+                    reason.placeholder = "Decision reason (required)";
+
+                    for (const decision of ["Approved", "Denied"]) {
+                        const button = document.createElement("button");
+                        button.type = "button";
+                        button.className = decision === "Approved"
+                            ? "btn btn-success btn-sm me-1"
+                            : "btn btn-danger btn-sm";
+                        button.textContent = decision;
+                        button.addEventListener("click", async () => {
+                            button.disabled = true;
+                            try {
+                                await reviewApplication(
+                                    application.id,
+                                    decision,
+                                    reason.value,
+                                    currentAdmin
+                                );
+                                await loadApplications();
+                                await loadStatistics(currentAdmin);
+                                showMessage(
+                                    adminAlert,
+                                    `Application ${application.applicationReference || application.id} marked ${decision.toLowerCase()}.`,
+                                    "success"
+                                );
+                            } catch (error) {
+                                console.error("Application review failed:", error);
+                                showMessage(
+                                    adminAlert,
+                                    error.message || "Unable to save the decision."
+                                );
+                                button.disabled = false;
+                            }
+                        });
+                        decisionCell.appendChild(button);
+                    }
+                    decisionCell.prepend(reason);
+                }
+                row.appendChild(decisionCell);
+                applicationsBody.appendChild(row);
+            }
+        } catch (error) {
+            console.error("Unable to load admin applications:", error);
+            showMessage(
+                adminAlert,
+                error.message || "Unable to load applications. Check Firestore permissions."
+            );
+            const row = document.createElement("tr");
+            const cell = addTextCell(row, "Applications could not be loaded.");
+            cell.colSpan = 6;
+            applicationsBody.appendChild(row);
+        }
+    }
+
+
+    async function loadAuditTrail() {
+        auditTrailMessage.classList.add("d-none");
+        auditTrailBody.replaceChildren();
+
+        try {
+            const events = await getAdminAuditEvents(currentAdmin);
+            if (!events.length) {
+                const row = document.createElement("tr");
+                const cell = addTextCell(row, "No audit events have been recorded.");
+                cell.colSpan = 5;
+                auditTrailBody.appendChild(row);
+                return;
+            }
+
+            for (const event of events) {
+                const row = document.createElement("tr");
+                addTextCell(row, formatTimestamp(event.createdAt));
+                addTextCell(row, event.action);
+                addTextCell(
+                    row,
+                    event.actorStaffNumber
+                        ? `${event.actorRole} (${event.actorStaffNumber})`
+                        : `${event.actorRole} (${event.actorUid})`
+                );
+                addTextCell(
+                    row,
+                    event.details?.applicationReference
+                        || event.targetApplicantId
+                        || event.entityId
+                );
+                addTextCell(
+                    row,
+                    event.details?.reason
+                        || event.details?.position
+                        || ""
+                );
+                auditTrailBody.appendChild(row);
+            }
+        } catch (error) {
+            console.error("Unable to load audit trail:", error);
+            showMessage(
+                auditTrailMessage,
+                error.message || "Unable to load audit trail. Check Firestore permissions."
+            );
+        }
+    }
+
+
+    function showApplications() {
+        document.getElementById("applicationReviewSection")
+            .scrollIntoView({ behavior: "smooth" });
+    }
+
+
+    async function showAuditTrail() {
+        auditTrailSection.classList.remove("d-none");
+        await loadAuditTrail();
+        auditTrailSection.scrollIntoView({ behavior: "smooth" });
+    }
+
+
+    // ========================================================
+    // FORMAT ROLE
+    // ========================================================
+
+    function formatRole(role) {
+
+        if (!role) {
+            return "Administrator";
+        }
+
+
+        return role
+            .replaceAll("_", " ")
+            .replace(
+                /\b\w/g,
+                function (letter) {
+                    return letter.toUpperCase();
+                }
+            );
+    }
+
+
+
+    // ========================================================
+    // DISPLAY ADMIN INFORMATION
+    // ========================================================
+
+    function displayAdminInformation(admin) {
+
+        const firstName =
+            admin.firstName || "";
+
+
+        const lastName =
+            admin.lastName || "";
+
+
+        const fullName =
+            `${firstName} ${lastName}`.trim()
+            || "Administrator";
+
+
+        const staffNumber =
+            admin.staffNumber ||
+            "Not assigned";
+
+
+        const region =
+            admin.region ||
+            "Not assigned";
+
+
+        const unit =
+            admin.unit ||
+            "Not assigned";
+
+
+        const role =
+            formatRole(
+                admin.role
+            );
+
+
+        const email =
+            admin.email ||
+            "Not available";
+
+
+        // ----------------------------------------------------
+        // Navbar
+        // ----------------------------------------------------
+
+        document.getElementById(
+            "navbarAdminName"
+        ).textContent =
+            fullName;
+
+
+        document.getElementById(
+            "navbarAdminRole"
+        ).textContent =
+            role.toUpperCase();
+
+
+        // ----------------------------------------------------
+        // Sidebar
+        // ----------------------------------------------------
+
+        document.getElementById(
+            "sidebarStaffNumber"
+        ).textContent =
+            staffNumber;
+
+
+        document.getElementById(
+            "sidebarRegion"
+        ).textContent =
+            region;
+
+
+        // ----------------------------------------------------
+        // Welcome
+        // ----------------------------------------------------
+
+        document.getElementById(
+            "welcomeName"
+        ).textContent =
+            firstName || fullName;
+
+
+        document.getElementById(
+            "welcomeUnit"
+        ).textContent =
+            unit;
+
+
+        document.getElementById(
+            "welcomeRegion"
+        ).textContent =
+            region;
+
+
+        // ----------------------------------------------------
+        // Admin information
+        // ----------------------------------------------------
+
+        document.getElementById(
+            "adminFullName"
+        ).textContent =
+            fullName;
+
+
+        document.getElementById(
+            "adminStaffNumber"
+        ).textContent =
+            staffNumber;
+
+
+        document.getElementById(
+            "adminEmail"
+        ).textContent =
+            email;
+
+
+        document.getElementById(
+            "adminRole"
+        ).textContent =
+            role;
+
+
+        document.getElementById(
+            "adminUnit"
+        ).textContent =
+            unit;
+
+
+        document.getElementById(
+            "adminRegion"
+        ).textContent =
+            region;
+    }
+
+
+
+    // ========================================================
+    // LOAD STATISTICS
+    // ========================================================
+
+    async function loadStatistics(admin) {
+        try {
+            const result = await getRegionalStats(
+                admin.region,
+                admin.role
+            );
+            if (!result.success) {
+                console.error(
+                    "Unable to load statistics:",
+                    result.error
+                );
+                return;
+            }
+
+            document.getElementById(
+                "totalApplications"
+            ).textContent = result.total ?? 0;
+            document.getElementById(
+                "pendingApplications"
+            ).textContent = result.pending ?? 0;
+            document.getElementById(
+                "shortlistedApplications"
+            ).textContent = result.shortlisted ?? 0;
+            document.getElementById(
+                "registeredUsers"
+            ).textContent = result.users ?? 0;
+        } catch (error) {
+            console.error(
+                "Statistics error:",
+                error
+            );
+        }
+    }
+
+
+
+    // ========================================================
+    // PROTECT THIS PAGE
+    //
+    // THIS REPLACES:
+    //
+    // localStorage.getItem("isAdminLoggedIn")
+    //
+    // ========================================================
+
+    protectAdminPage(
+
+        async function (admin) {
+
+
+            // -----------------------------------------------
+            // Administrator passed Firebase authentication
+            // and Firestore authorization.
+            // -----------------------------------------------
+
+            console.log(
+                "Authorized administrator:",
+                admin.staffNumber
+            );
+
+            currentAdmin = admin;
+
+            // -----------------------------------------------
+            // Display administrator details
+            // -----------------------------------------------
+
+            displayAdminInformation(
+                admin
+            );
+
+
+            // -----------------------------------------------
+            // Show dashboard
+            // -----------------------------------------------
+
+            loadingScreen.style.display =
+                "none";
+
+
+            dashboardContent.style.display =
+                "block";
+
+
+            // -----------------------------------------------
+            // Load regional statistics
+            // -----------------------------------------------
+
+            await loadStatistics(
+                admin
+            );
+            await loadApplications();
+
+        }
+    );
+
+
+
+    // ========================================================
+    // LOGOUT
+    // ========================================================
+
+    logoutButton.addEventListener(
+
+        "click",
+
+        async function () {
+
+
+            const confirmLogout =
+                confirm(
+                    "Are you sure you want to log out?"
+                );
+
+
+            if (!confirmLogout) {
+                return;
+            }
+
+
+            logoutButton.disabled =
+                true;
+
+
+            logoutButton.textContent =
+                "Logging out...";
+
+
+            await adminLogout();
+
+        }
+    );
+
+
+
+    // ========================================================
+    // ========================================================
+    // ADMIN REVIEW ACTIONS
+    // ========================================================
+
+    document.getElementById(
+        "applicationsMenu"
+    ).addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+            showApplications();
+        }
+    );
+
+
+    document.getElementById(
+        "vacanciesMenu"
+    ).addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+            alert(
+                "Vacancy management will be connected next."
+            );
+        }
+    );
+
+
+    document.getElementById(
+        "verificationMenu"
+    ).addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+            alert(
+                "Applicant verification will be connected next."
+            );
+        }
+    );
+
+
+    document.getElementById(
+        "documentsMenu"
+    ).addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+            alert(
+                "Document management will be connected next."
+            );
+        }
+    );
+
+
+    document.getElementById(
+        "auditMenu"
+    ).addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+            showAuditTrail();
+        }
+    );
+
+
+
+    // ========================================================
+    // QUICK ACTION CARDS
+    // ========================================================
+
+    document.getElementById(
+        "viewApplicationsCard"
+    ).addEventListener(
+        "click",
+        function () {
+
+            showApplications();
+        }
+    );
+
+
+    document.getElementById(
+        "manageVacanciesCard"
+    ).addEventListener(
+        "click",
+        function () {
+
+            alert(
+                "Vacancy management will be connected next."
+            );
+        }
+    );
+
+
+    document.getElementById(
+        "verificationCard"
+    ).addEventListener(
+        "click",
+        function () {
+
+            alert(
+                "Applicant verification will be connected next."
+            );
+        }
+    );
+
+
+    document.getElementById(
+        "auditCard"
+    ).addEventListener(
+        "click",
+        function () {
+
+            showAuditTrail();
+        }
+    );
+
+    document.getElementById(
+        "refreshApplicationsBtn"
+    ).addEventListener("click", loadApplications);
+
+    document.getElementById(
+        "refreshAuditBtn"
+    ).addEventListener("click", loadAuditTrail);
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<!-- Bootstrap JavaScript -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+></script>
+
+
 </body>
+
 </html>
