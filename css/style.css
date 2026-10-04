@@ -1,0 +1,1191 @@
+/* ============================================================
+   NAMPOL RECRUITMENT SYSTEM - MASTER STYLESHEET
+   Author: Alma N Haihambo
+   ============================================================ */
+
+/* ============================================================
+   1. GLOBAL / BASE STYLES
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    background-attachment: fixed;
+    color: #ffffff;
+    min-height: 100vh;
+    padding-top: 80px; /* Space for fixed navbar */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #e94560;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #c73e54;
+}
+
+/* Selection Color */
+::selection {
+    background: #e94560;
+    color: #ffffff;
+}
+
+/* ============================================================
+   2. NAVBAR
+   ============================================================ */
+
+.navbar {
+    background: rgba(0, 0, 0, 0.9) !important;
+    backdrop-filter: blur(10px);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    font-size: 1.3rem;
+    color: #ffffff !important;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: #e94560 !important;
+    transform: scale(1.02);
+}
+
+.nav-logo {
+    height: 35px;
+    width: auto;
+    margin-right: 10px;
+}
+
+.nav-link {
+    color: white !important;
+    margin-left: 15px;
+    font-size: 1rem;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: #e94560;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover {
+    color: #e94560 !important;
+}
+
+.nav-link:hover::after {
+    width: 80%;
+}
+
+.navbar-toggler {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.5);
+}
+
+/* ============================================================
+   3. HERO SECTION
+   ============================================================ */
+
+.hero-section {
+    padding: 60px 0;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.hero-logo {
+    height: 100px;
+    width: auto;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 4px 15px rgba(233, 69, 96, 0.5));
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 30px;
+    color: #ffffff;
+}
+
+.police-badge {
+    font-size: 0.8rem;
+    background: #e94560;
+    padding: 5px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+}
+
+/* ============================================================
+   4. BUTTONS
+   ============================================================ */
+
+.btn-custom {
+    background-color: #e94560;
+    color: white;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    border-radius: 30px;
+    border: none;
+    margin: 10px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.btn-custom:hover {
+    background-color: #c73e54;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+}
+
+.btn-login,
+.btn-register,
+.btn-submit,
+.btn-check {
+    background: #e94560;
+    color: white;
+    width: 100%;
+    padding: 12px;
+    border-radius: 30px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover,
+.btn-register:hover,
+.btn-submit:hover,
+.btn-check:hover {
+    background: #c73e54;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+}
+
+.btn-admin-login {
+    background: #0f3460;
+    color: white;
+    width: 100%;
+    padding: 12px;
+    border-radius: 30px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-admin-login:hover {
+    background: #16213e;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(15, 52, 96, 0.5);
+}
+
+.btn-admin,
+.btn-view,
+.btn-logout {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    font-size: 0.9rem;
+    margin: 2px;
+    transition: all 0.3s ease;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-admin {
+    background: #e94560;
+}
+
+.btn-admin:hover {
+    background: #c73e54;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-view {
+    background: #0f3460;
+}
+
+.btn-view:hover {
+    background: #16213e;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-logout {
+    background: #dc3545;
+    cursor: pointer;
+}
+
+.btn-logout:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.btn-dashboard {
+    background: #e94560;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: none;
+    margin-right: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-dashboard:hover {
+    background: #c73e54;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-secondary-dashboard {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin-right: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary-dashboard:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* ============================================================
+   5. CARDS & CONTAINERS
+   ============================================================ */
+
+.feature-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 30px;
+    margin: 20px 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 15px 40px rgba(233, 69, 96, 0.3);
+    border-color: rgba(233, 69, 96, 0.5);
+}
+
+.feature-card h4 {
+    color: #e94560;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+/* Form Containers */
+.login-container,
+.register-container,
+.admin-login-container,
+.form-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    margin: 40px auto;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.login-container {
+    max-width: 450px;
+}
+
+.register-container {
+    max-width: 600px;
+}
+
+.admin-login-container {
+    max-width: 500px;
+}
+
+.form-container {
+    max-width: 800px;
+}
+
+/* Dashboard/Admin Cards */
+.dashboard-card,
+.admin-card,
+.status-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover,
+.admin-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.status-card {
+    padding: 30px;
+}
+
+/* ============================================================
+   6. FORMS
+   ============================================================ */
+
+.form-control {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 20px;
+    color: #1a1a2e;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background: #ffffff;
+    border: 2px solid #e94560;
+    box-shadow: 0 0 0 0.2rem rgba(233, 69, 96, 0.25);
+    outline: none;
+    color: #1a1a2e;
+}
+
+.form-control::placeholder {
+    color: #6c757d;
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.form-check-input {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.form-check-input:checked {
+    background-color: #e94560;
+    border-color: #e94560;
+}
+
+.form-check-label {
+    color: #ffffff;
+}
+
+/* Select dropdowns */
+select.form-control {
+    cursor: pointer;
+}
+
+select.form-control option {
+    background: #1a1a2e;
+    color: #ffffff;
+}
+
+/* Section titles in forms */
+.section-title {
+    border-bottom: 2px solid #e94560;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: 30px;
+    color: #e94560;
+    font-weight: 600;
+}
+
+/* ============================================================
+   7. TABLES
+   ============================================================ */
+
+.table {
+    color: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 15px;
+}
+
+.table tbody td {
+    border-color: rgba(255, 255, 255, 0.1);
+    padding: 12px 15px;
+    vertical-align: middle;
+    color: #ffffff;
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background: rgba(233, 69, 96, 0.15);
+    transform: scale(1.005);
+}
+
+.table-dark {
+    --bs-table-bg: transparent;
+    --bs-table-color: #ffffff;
+    --bs-table-hover-bg: rgba(233, 69, 96, 0.15);
+}
+
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* ============================================================
+   8. STATUS BADGES
+   ============================================================ */
+
+.status-badge {
+    background: #ffc107;
+    color: #1a1a2e;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-pending {
+    background: #ffc107;
+    color: #1a1a2e;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-reviewed {
+    background: #17a2b8;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-shortlisted {
+    background: #28a745;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-rejected {
+    background: #dc3545;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.status-active {
+    background: #17a2b8;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.notification-badge {
+    background: #ffc107;
+    color: #1a1a2e;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.region-badge {
+    background: #28a745;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.admin-badge {
+    background: #0f3460;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+/* ============================================================
+   9. TIMELINE (Status Page)
+   ============================================================ */
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #e94560;
+    border: 2px solid white;
+    transition: all 0.3s ease;
+}
+
+.timeline-item.completed::before {
+    background: #28a745;
+}
+
+.timeline-item.current::before {
+    background: #ffc107;
+    box-shadow: 0 0 10px #ffc107;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px #ffc107; }
+    50% { box-shadow: 0 0 20px #ffc107, 0 0 30px #ffc107; }
+}
+
+/* ============================================================
+   10. STATS CARDS (Dashboard/Admin)
+   ============================================================ */
+
+.stat-card {
+    text-align: center;
+    padding: 30px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #e94560;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-number {
+    transform: scale(1.1);
+    text-shadow: 0 0 20px rgba(233, 69, 96, 0.6);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    opacity: 0.8;
+    letter-spacing: 0.5px;
+    margin-top: 5px;
+}
+
+/* ============================================================
+   11. SEARCH & UPLOAD
+   ============================================================ */
+
+.search-box {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 30px;
+    padding: 10px 20px;
+    border: none;
+    color: #1a1a2e;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.search-box:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.3);
+}
+
+.search-bar {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 30px;
+    padding: 10px 20px;
+    border: none;
+    color: #1a1a2e;
+    width: 100%;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.3);
+    background: #ffffff;
+}
+
+.upload-area {
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: #e94560;
+    background: rgba(233, 69, 96, 0.1);
+    transform: translateY(-3px);
+}
+
+.upload-area h5 {
+    color: #e94560;
+    margin-bottom: 10px;
+}
+
+/* ============================================================
+   12. ALERTS & INFO BOXES
+   ============================================================ */
+
+.info-alert,
+.info-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-left: 4px solid #e94560;
+    color: #ffffff;
+}
+
+.error-message {
+    display: none;
+    background: rgba(220, 53, 69, 0.2);
+    border: 1px solid #dc3545;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+    color: #ff6b6b;
+    text-align: center;
+}
+
+.success-message {
+    display: none;
+    background: rgba(40, 167, 69, 0.2);
+    border: 1px solid #28a745;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+    color: #28a745;
+    text-align: center;
+}
+
+.alert-warning {
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid #ffc107;
+    color: #ffc107;
+    border-radius: 10px;
+}
+
+.alert-info {
+    background: rgba(23, 162, 184, 0.15);
+    border: 1px solid #17a2b8;
+    color: #17a2b8;
+    border-radius: 10px;
+}
+
+.alert-success {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid #28a745;
+    color: #28a745;
+    border-radius: 10px;
+}
+
+/* ============================================================
+   13. ADMIN SPECIFIC
+   ============================================================ */
+
+.admin-profile {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 15px;
+}
+
+.admin-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e94560;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 15px;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+}
+
+.admin-code {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    display: inline-block;
+    color: #ffffff;
+}
+
+.login-time {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 10px;
+}
+
+.activity-icon {
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+/* Nav Pills */
+.nav-pills .nav-link {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 3px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link.active {
+    background: #e94560;
+    color: white;
+}
+
+.nav-pills .nav-link:hover {
+    background: rgba(233, 69, 96, 0.5);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* List Group */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: #ffffff;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background: rgba(233, 69, 96, 0.1);
+}
+
+.list-group-item.bg-dark {
+    background: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ============================================================
+   14. DASHBOARD SPECIFIC
+   ============================================================ */
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #e94560;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin: 0 auto 15px;
+    box-shadow: 0 8px 25px rgba(233, 69, 96, 0.5);
+}
+
+.dashboard-container {
+    padding: 30px;
+}
+
+.status-container {
+    padding: 30px;
+}
+
+/* ============================================================
+   15. MFA & LOADING
+   ============================================================ */
+
+.mfa-section {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(233, 69, 96, 0.1);
+    border-radius: 10px;
+    border-left: 4px solid #e94560;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.spinner-border {
+    color: #e94560 !important;
+}
+
+/* ============================================================
+   16. FOOTER
+   ============================================================ */
+
+footer {
+    background: rgba(0, 0, 0, 0.9);
+    color: #ffffff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 50px;
+    border-top: 2px solid #e94560;
+}
+
+footer p {
+    margin: 0;
+}
+
+footer .small {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-top: 5px;
+}
+
+/* ============================================================
+   17. LINKS
+   ============================================================ */
+
+.register-link,
+.login-link,
+.back-link {
+    color: #e94560;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.register-link:hover,
+.login-link:hover,
+.back-link:hover {
+    color: #ff6b81;
+    text-decoration: underline;
+}
+
+/* ============================================================
+   18. RESPONSIVE DESIGN
+   ============================================================ */
+
+@media (max-width: 992px) {
+    .hero-title {
+        font-size: 2.2rem;
+    }
+    
+    .hero-logo {
+        height: 80px;
+    }
+    
+    .nav-link {
+        margin-left: 0;
+        padding: 10px 0;
+    }
+    
+    .nav-link::after {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: 70px;
+    }
+    
+    .hero-section {
+        padding: 40px 0;
+    }
+    
+    .hero-title {
+        font-size: 1.8rem;
+        letter-spacing: 1px;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+    
+    .hero-logo {
+        height: 70px;
+    }
+    
+    .login-container,
+    .register-container,
+    .admin-login-container,
+    .form-container {
+        padding: 25px;
+        margin: 20px auto;
+    }
+    
+    .btn-custom {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .admin-profile {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .admin-avatar {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .table thead th,
+    .table tbody td {
+        padding: 8px 10px;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    .hero-logo {
+        height: 60px;
+    }
+    
+    .police-badge {
+        font-size: 0.7rem;
+        padding: 4px 12px;
+    }
+    
+    .feature-card {
+        padding: 20px;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* ============================================================
+   19. ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.5s ease-out;
+}
+
+/* Loading skeleton */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1) 25%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.1) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================================================
+   20. UTILITY CLASSES
+   ============================================================ */
+
+.text-danger { color: #dc3545 !important; }
+.text-success { color: #28a745 !important; }
+.text-warning { color: #ffc107 !important; }
+.text-info { color: #17a2b8 !important; }
+.text-muted { color: rgba(255, 255, 255, 0.6) !important; }
+
+.bg-transparent { background: transparent !important; }
+
+.rounded-pill { border-radius: 50rem !important; }
+
+.shadow-custom {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.border-accent {
+    border: 1px solid rgba(233, 69, 96, 0.5);
+}
+
+.hover-lift {
+    transition: transform 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: white;
+        color: black;
+        padding-top: 0;
+    }
+    
+    .navbar,
+    footer,
+    .btn-custom,
+    .btn-admin,
+    .btn-view {
+        display: none;
+    }
+}
