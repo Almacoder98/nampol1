@@ -25,7 +25,6 @@ import {
     serverTimestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { appendAuditEvent } from "./audit.js";
 
 
 // ============================================================
@@ -127,17 +126,6 @@ export async function registerUser(
 
                 updatedAt:
                     serverTimestamp()
-            });
-
-            appendAuditEvent(batch, {
-                action: "applicant.registered",
-                actorUid: user.uid,
-                actorRole: "applicant",
-                targetApplicantId: user.uid,
-                region: userData.region || "",
-                entityType: "user",
-                entityId: user.uid,
-                details: {}
             });
 
             await batch.commit();
@@ -427,25 +415,12 @@ export async function loginUser(
                     serverTimestamp()
             }, { merge: true });
 
-            if (userData.emailVerified !== true) {
-                appendAuditEvent(batch, {
-                    action: "applicant.email_verified",
-                    actorUid: user.uid,
-                    actorRole: "applicant",
-                    targetApplicantId: user.uid,
-                    region: userData.region || "",
-                    entityType: "user",
-                    entityId: user.uid,
-                    details: {}
-                });
-            }
-
             await batch.commit();
 
         } catch (updateError) {
 
             console.error(
-                "Could not update applicant verification metadata or audit log:",
+                "Could not update applicant verification metadata:",
                 updateError
             );
         }

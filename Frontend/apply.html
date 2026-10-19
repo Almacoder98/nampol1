@@ -571,6 +571,7 @@ import {
 import {
     submitApplication
 } from "../js/firestore.js";
+import { getOpenJobs } from "../js/jobs.js";
 
 
 const loadingScreen =
@@ -603,6 +604,18 @@ const requirementsText =
 
 let currentUser = null;
 let currentUserData = null;
+let publishedJobs = [];
+
+// Add published vacancies to the existing list while preserving legacy choices.
+try {
+    const requestedPosition = new URLSearchParams(window.location.search).get("position");
+    publishedJobs = await getOpenJobs();
+    for (const job of publishedJobs) {
+        if (job.title && ![...position.options].some(option => option.value === job.title)) {
+            position.add(new Option(job.title, job.title));
+        }
+    }
+} catch (error) { console.warn("Published job choices could not be loaded", error); }
 let documentsReady = false;
 
 
@@ -690,7 +703,8 @@ position.addEventListener(
         }
 
         requirementsText.textContent =
-            vacancyRequirements[selectedPosition]
+            publishedJobs.find(job => job.title === selectedPosition)?.requirements
+            || vacancyRequirements[selectedPosition]
             || "Requirements will be assessed during review.";
 
         positionRequirements.classList.remove(
@@ -698,6 +712,12 @@ position.addEventListener(
         );
     }
 );
+
+const requestedPosition = new URLSearchParams(window.location.search).get("position");
+if (requestedPosition && [...position.options].some(option => option.value === requestedPosition)) {
+    position.value = requestedPosition;
+    position.dispatchEvent(new Event("change"));
+}
 
 
 onAuthStateChanged(

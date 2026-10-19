@@ -12,7 +12,6 @@ import {
     serverTimestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { appendAuditEvent } from "./audit.js";
 
 
 const loadingScreen = document.getElementById("loadingScreen");
@@ -284,17 +283,6 @@ profileForm.addEventListener(
 
                 updatedAt: serverTimestamp()
 
-            });
-
-            appendAuditEvent(batch, {
-                action: "applicant.profile_completed",
-                actorUid: currentUser.uid,
-                actorRole: "applicant",
-                targetApplicantId: currentUser.uid,
-                region: regionValue,
-                entityType: "user",
-                entityId: currentUser.uid,
-                details: {}
             });
 
             await batch.commit();

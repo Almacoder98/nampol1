@@ -342,6 +342,15 @@
                 Login to Admin Portal
             </button>
 
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
+                <button type="button" class="btn btn-outline-light btn-sm" id="resendVerificationBtn">
+                    Resend verification email
+                </button>
+                <button type="button" class="btn btn-outline-light btn-sm" id="forgotPasswordBtn">
+                    Forgot Password?
+                </button>
+            </div>
+
 
             <!-- Loading -->
 
@@ -408,6 +417,8 @@
 
     import {
         loginAdmin,
+        resendAdminVerificationEmail,
+        resetAdminPassword,
         redirectIfAdminLoggedIn
     } from "../js/admin.js";
 
@@ -436,6 +447,9 @@
 
     const successMessage =
         document.getElementById("successMessage");
+
+    const resendButton = document.getElementById("resendVerificationBtn");
+    const resetButton = document.getElementById("forgotPasswordBtn");
 
 
     // ========================================================
@@ -476,6 +490,8 @@
             isLoading ? "block" : "none";
 
         loginButton.disabled = isLoading;
+        resendButton.disabled = isLoading;
+        resetButton.disabled = isLoading;
 
         emailInput.disabled = isLoading;
         passwordInput.disabled = isLoading;
@@ -515,11 +531,15 @@
             setLoading(true);
 
 
-            const result =
-                await loginAdmin(email, password);
-
-
-            setLoading(false);
+            let result;
+            try {
+                result = await loginAdmin(email, password);
+            } catch {
+                showError("Unable to complete authentication or sign out. Please reload the page and try again.");
+                return;
+            } finally {
+                setLoading(false);
+            }
 
 
             if (!result.success) {
@@ -535,6 +555,7 @@
             showSuccess(
                 "Login successful. Administrator verified. Redirecting..."
             );
+            setLoading(true);
 
 
             setTimeout(function () {
@@ -544,6 +565,28 @@
             }, 1000);
         }
     );
+
+    async function requestRecoveryEmail(resend) {
+        hideMessages();
+        if (!emailInput.reportValidity()) return;
+        if (resend && !passwordInput.reportValidity()) return;
+        const email = emailInput.value.trim().toLowerCase();
+        setLoading(true);
+        try {
+            const result = resend
+                ? await resendAdminVerificationEmail(email, passwordInput.value)
+                : await resetAdminPassword(email);
+            if (result.success) showSuccess(result.message);
+            else showError(result.error);
+        } catch {
+            showError("Unable to complete the request or sign out. Please reload the page and try again.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    resendButton.addEventListener("click", () => requestRecoveryEmail(true));
+    resetButton.addEventListener("click", () => requestRecoveryEmail(false));
 
 
     // ========================================================

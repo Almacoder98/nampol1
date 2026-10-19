@@ -123,15 +123,17 @@
             ></div>
 
 
-            <div class="alert alert-warning prototype-notice">
+            <div class="alert alert-info prototype-notice">
 
-                <strong>Firebase Storage upload:</strong>
+                Documents are validated by the prototype and their metadata
+                is recorded securely in Firestore. Persistent binary file
+                storage is not enabled in this prototype environment.
 
-                Your selected files will be uploaded to Firebase Storage.
-                Access is restricted by the project's Storage security rules.
-
-                Deploy the included rules before accepting real applicant
-                documents. Use sample files while testing.
+                <div class="mt-2">
+                    Validation confirms only that the selected file passed
+                    prototype-side file and metadata checks. It does not
+                    verify the document's authenticity. Use sample/test files.
+                </div>
 
             </div>
 
@@ -282,7 +284,7 @@
                         type="submit"
                         class="btn btn-primary btn-lg"
                     >
-                        Upload and Save Documents
+                        Validate and Save Metadata
                     </button>
 
                 </div>

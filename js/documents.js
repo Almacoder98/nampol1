@@ -10,8 +10,6 @@ import {
     serverTimestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { uploadPrivateFile, deleteFile } from "./storage.js";
-import { appendAuditEvent } from "./audit.js";
 
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -160,6 +158,13 @@ function validateFile(
         );
     }
 
+    if (file.size === 0) {
+
+        throw new Error(
+            `${documentName} cannot be an empty file.`
+        );
+    }
+
 
     if (!allowedTypes.includes(file.type)) {
 
@@ -188,11 +193,11 @@ function createDocumentMetadata(
 
         mimeType: file.type,
 
-        storageMode: "firebase-storage",
+        storageMode: "prototype-metadata-only",
 
-        validationStatus: "uploaded",
+        uploaded: false,
 
-        uploaded: true,
+        validationStatus: "validated",
 
         updatedAt: serverTimestamp()
 
@@ -255,7 +260,8 @@ async function loadExistingDocuments(uid) {
 
                 <div class="list-group-item">
                     <strong>Status:</strong>
-                    Uploaded to Firebase Storage
+                    Prototype-validated; metadata recorded in Firestore only.
+                    Document authenticity has not been verified.
                 </div>
 
             </div>
@@ -499,60 +505,29 @@ documentForm.addEventListener(
         saveDocumentsBtn.disabled = true;
 
         saveDocumentsBtn.textContent =
-            "Uploading Documents...";
+            "Validating and Saving Metadata...";
 
         const metadataRef = doc(
             db,
             "applicantDocuments",
             currentUser.uid
         );
-        let previousData = {};
-        const uploadedPaths = [];
-        let metadataSaved = false;
 
         try {
-            const previousSnapshot = await getDoc(metadataRef);
-            previousData = previousSnapshot.exists()
-                ? previousSnapshot.data()
-                : {};
+            const cvMetadata =
+                createDocumentMetadata(cv, "cv");
 
-            const uploadApplicantDocument = async (file, type) => {
-                const path =
-                    `applicantDocuments/${currentUser.uid}/${type}/${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                const result = await uploadPrivateFile(file, path);
+            const identificationMetadata =
+                createDocumentMetadata(
+                    identification,
+                    "identification"
+                );
 
-                if (!result.success) {
-                    throw new Error(
-                        result.error || `Unable to upload ${type}.`
-                    );
-                }
-
-                uploadedPaths.push(path);
-                return {
-                    ...createDocumentMetadata(file, type),
-                    storagePath: path
-                };
-            };
-
-            const uploadResults = await Promise.allSettled([
-                    uploadApplicantDocument(cv, "cv"),
-                    uploadApplicantDocument(identification, "identification"),
-                    uploadApplicantDocument(
-                        certificate,
-                        "qualification_certificate"
-                    )
-                ]);
-            const failedUpload = uploadResults.find(
-                result => result.status === "rejected"
-            );
-            if (failedUpload) {
-                throw failedUpload.reason;
-            }
-            const [
-                cvMetadata,
-                identificationMetadata,
-                certificateMetadata
-            ] = uploadResults.map(result => result.value);
+            const certificateMetadata =
+                createDocumentMetadata(
+                    certificate,
+                    "qualification_certificate"
+                );
 
             const userRef =
                 doc(
@@ -569,99 +544,43 @@ documentForm.addEventListener(
                 identification: identificationMetadata,
                 certificate: certificateMetadata,
                 documentsValidated: true,
+                prototypeMode: true,
                 updatedAt: serverTimestamp()
             });
             batch.update(userRef, {
                 documentsUploaded: true,
-                documentStorageMode: "firebase-storage",
+                documentStorageMode: "prototype-metadata-only",
                 documentsUpdatedAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
-            appendAuditEvent(batch, {
-                action: "applicant.documents_uploaded",
-                actorUid: currentUser.uid,
-                actorRole: "applicant",
-                targetApplicantId: currentUser.uid,
-                region: currentUserData.region || "",
-                entityType: "applicantDocuments",
-                entityId: currentUser.uid,
-                details: {
-                    documentTypes: [
-                        "cv",
-                        "identification",
-                        "qualification_certificate"
-                    ]
-                }
-            });
             await batch.commit();
-            metadataSaved = true;
 
             await loadExistingDocuments(
                 currentUser.uid
             );
 
-            let oldFileCleanupFailed = false;
-            for (const key of [
-                "cv",
-                "identification",
-                "certificate"
-            ]) {
-                const oldPath = previousData[key]?.storagePath;
-                const newPath = key === "certificate"
-                    ? certificateMetadata.storagePath
-                    : key === "cv"
-                        ? cvMetadata.storagePath
-                        : identificationMetadata.storagePath;
-                if (oldPath && oldPath !== newPath) {
-                    const result = await deleteFile(oldPath);
-                    if (!result.success) {
-                        oldFileCleanupFailed = true;
-                        console.error(
-                            "Unable to remove replaced document:",
-                            result.error
-                        );
-                    }
-                }
-            }
-
             showAlert(
-                oldFileCleanupFailed
-                    ? "Your new documents were uploaded, but an older file could not be removed. Contact support to clean it up."
-                    : "Your documents were uploaded securely and saved successfully.",
-                oldFileCleanupFailed ? "warning" : "success"
+                "Prototype validation completed. Document metadata was recorded securely in Firestore; the files themselves were not uploaded or stored. Authenticity was not verified.",
+                "success"
             );
 
             saveDocumentsBtn.disabled =
                 false;
 
             saveDocumentsBtn.textContent =
-                "Upload and Save Documents";
+                "Validate and Save Metadata";
 
 
         } catch (error) {
 
             console.error(
-                "Error uploading applicant documents:",
+                "Error saving applicant document metadata:",
                 error
             );
 
-            if (!metadataSaved) {
-                await Promise.all(
-                    uploadedPaths.map(async path => {
-                        const result = await deleteFile(path);
-                        if (!result.success) {
-                            console.error(
-                                "Unable to clean up incomplete upload:",
-                                result.error
-                            );
-                        }
-                    })
-                );
-            }
-
             showAlert(
                 error.message ||
-                "Unable to upload your documents. Please try again."
+                "Unable to save your document metadata. Please try again."
             );
 
 
@@ -669,7 +588,7 @@ documentForm.addEventListener(
                 false;
 
             saveDocumentsBtn.textContent =
-                "Upload and Save Documents";
+                "Validate and Save Metadata";
         }
     }
 );

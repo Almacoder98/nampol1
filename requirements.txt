@@ -1,0 +1,7 @@
+fastapi==0.142.2
+firebase-admin==7.7.0
+uvicorn==0.48.0
+httpx==0.28.1
+python-multipart==0.0.29
+Pillow==12.2.0
+pypdf==6.20.0

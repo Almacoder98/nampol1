@@ -12,7 +12,6 @@ import {
     serverTimestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { appendAuditEvent } from "./audit.js";
 
 
 // ============================================================
@@ -216,20 +215,6 @@ export async function submitApplication(
                     serverTimestamp()
             }
         );
-
-        appendAuditEvent(batch, {
-            action: "application.submitted",
-            actorUid: applicationData.applicantId,
-            actorRole: "applicant",
-            targetApplicantId: applicationData.applicantId,
-            region: applicationData.region || "",
-            entityType: "application",
-            entityId: documentReference.id,
-            details: {
-                applicationReference,
-                position: applicationData.position
-            }
-        });
 
         await batch.commit();
 
