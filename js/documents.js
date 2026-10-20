@@ -1,685 +1,211 @@
 import { auth, db } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import {
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-    doc,
-    getDoc,
-    serverTimestamp,
-    writeBatch
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { uploadPrivateFile, deleteFile } from "./storage.js";
-import { appendAuditEvent } from "./audit.js";
-
-
+// Public API origin only. Production should proxy /api on the HTTPS frontend origin.
+// Keep this aligned with BACKEND.md and the backend's explicit CORS allowlist.
+const API_ORIGIN = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:8001` : window.location.origin;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-
-const loadingScreen =
-    document.getElementById("loadingScreen");
-
-const documentPage =
-    document.getElementById("documentPage");
-
-const documentForm =
-    document.getElementById("documentForm");
-
-const alertBox =
-    document.getElementById("alertBox");
-
-const saveDocumentsBtn =
-    document.getElementById("saveDocumentsBtn");
-
-const dashboardBtn =
-    document.getElementById("dashboardBtn");
-
-
-const cvFile =
-    document.getElementById("cvFile");
-
-const idFile =
-    document.getElementById("idFile");
-
-const certificateFile =
-    document.getElementById("certificateFile");
-
-
-const cvStatus =
-    document.getElementById("cvStatus");
-
-const idStatus =
-    document.getElementById("idStatus");
-
-const certificateStatus =
-    document.getElementById("certificateStatus");
-
-
-const cvInfo =
-    document.getElementById("cvInfo");
-
-const idInfo =
-    document.getElementById("idInfo");
-
-const certificateInfo =
-    document.getElementById("certificateInfo");
-
-
-const savedDocumentsSection =
-    document.getElementById("savedDocumentsSection");
-
-const savedDocumentsList =
-    document.getElementById("savedDocumentsList");
-
-
+const KINDS = ["cv", "identification", "certificate"];
+const element = id => document.getElementById(id);
+const inputs = [element("cvFile"), element("idFile"), element("certificateFile")];
+const statuses = [element("cvStatus"), element("idStatus"), element("certificateStatus")];
+const infos = [element("cvInfo"), element("idInfo"), element("certificateInfo")];
+const documentForm = element("documentForm");
+const saveDocumentsBtn = element("saveDocumentsBtn");
+const alertBox = element("alertBox");
 let currentUser = null;
-let currentUserData = null;
-
+let uploading = false;
+let uncertainOutcome = false;
 
 function showAlert(message, type = "danger") {
-
     alertBox.className = `alert alert-${type}`;
     alertBox.textContent = message;
-
     alertBox.classList.remove("d-none");
+}
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+function setBusy(busy) {
+    uploading = busy;
+    saveDocumentsBtn.disabled = busy || uncertainOutcome || !currentUser;
+    saveDocumentsBtn.textContent = busy ? "Uploading, scanning and storing..." : "Upload Documents Securely";
+    documentForm.setAttribute("aria-busy", String(busy));
+    element("uploadStatus").classList.toggle("d-none", !busy);
+    inputs.forEach(input => { input.disabled = busy; });
+}
+
+function updateSelection() {
+    inputs.forEach((input, index) => {
+        const file = input.files[0];
+        statuses[index].className = `badge bg-${file ? "success" : "secondary"} status-badge`;
+        statuses[index].textContent = file ? "Selected" : "Not selected";
+        infos[index].textContent = file ? `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MiB)` : "";
     });
 }
 
-
-function hideAlert() {
-
-    alertBox.classList.add("d-none");
-    alertBox.textContent = "";
+function validateFiles(files) {
+    KINDS.forEach(kind => {
+        const file = files[kind];
+        if (!file || !file.size || file.size > MAX_FILE_SIZE) {
+            throw new Error(`${kind}: select a non-empty PDF no larger than 5 MiB.`);
+        }
+        if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== "application/pdf")) {
+            throw new Error(`${kind}: only PDF files are accepted.`);
+        }
+    });
 }
 
+function isReadySet(manifest) {
+    return manifest && /^[a-f0-9]{32}$/.test(manifest.setId)
+        && manifest.state === "ready" && manifest.schemaVersion === 1
+        && KINDS.every(kind => {
+            const item = manifest.documents?.[kind];
+            return item?.scanStatus === "clean" && typeof item.fileName === "string"
+                && item.fileSize > 0 && typeof item.mimeType === "string";
+        });
+}
 
-function formatFileSize(bytes) {
-
-    if (!bytes) {
-        return "0 KB";
+async function apiRequest(user, method, body) {
+    let token;
+    try {
+        // Force refresh before sending files; revoked/disabled sessions fail closed.
+        token = await user.getIdToken(true);
+    } catch {
+        throw new Error("Your session could not be refreshed. Please log in again.");
     }
-
-    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+    if (auth.currentUser !== user || currentUser !== user) {
+        throw new Error("Your session changed. Please log in again.");
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000);
+    let response;
+    try {
+        response = await fetch(`${API_ORIGIN}/api/me/document-sets`, {
+            method, headers: { Authorization: `Bearer ${token}` },
+            ...(body ? { body } : {}), signal: controller.signal,
+            credentials: "omit", cache: "no-store", redirect: "error"
+        });
+        if (!response.ok) {
+            const messages = {
+                401: "Your session has expired. Please log in again.",
+                403: "Upload access denied. Check your verified email and applicant profile.",
+                408: "The upload request timed out. Check saved sets before trying again.",
+                413: "Files rejected: each PDF must be no larger than 5 MiB.",
+                422: "Files rejected by server validation or malware scanning. Select safe, valid sample PDFs.",
+                429: "The upload service is busy. Please try again later."
+            };
+            throw new Error(messages[response.status] || "The document service is unavailable. Upload was not confirmed; check saved sets before retrying.");
+        }
+        const result = await response.json();
+        if (auth.currentUser !== user || currentUser !== user) {
+            throw new Error("Your session changed. Reload to check your saved documents.");
+        }
+        return result;
+    } catch (error) {
+        // A dropped response may follow a committed upload. Never automatically POST again.
+        if (method === "POST" && (!response || response.ok || response.status >= 500)) {
+            uncertainOutcome = true;
+            throw new Error("Upload outcome could not be confirmed. Reload this page to check saved document sets before uploading again.");
+        }
+        if (!response) {
+            throw new Error("Cannot reach the document service. Check that the backend is running and reload this page.");
+        }
+        throw error;
+    } finally {
+        clearTimeout(timeout);
+    }
 }
 
+function displaySets(sets) {
+    const list = element("savedDocumentsList");
+    list.replaceChildren();
+    for (const manifest of sets) {
+        const row = document.createElement("div");
+        row.className = "list-group-item";
+        row.textContent = `Document set ID: ${manifest.setId} ? Upload confirmed; malware scan clean. `
+            + KINDS.map(kind => `${kind}: ${manifest.documents[kind].fileName}`).join("; ")
+            + ". Document authenticity has not been verified.";
+        list.append(row);
+    }
+    element("savedDocumentsSection").classList.toggle("d-none", sets.length === 0);
+}
 
-function setSelectedStatus(
-    statusElement,
-    infoElement,
-    file
-) {
+async function loadExistingDocuments(user) {
+    const result = await apiRequest(user, "GET");
+    if (!Array.isArray(result.sets)) throw new Error("Unable to read saved document sets. Reload before uploading.");
+    const ready = result.sets.filter(isReadySet).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    displaySets(ready);
+    if (result.sets.some(manifest => manifest.state === "pending")) {
+        throw new Error("A previous upload is still pending. Wait and reload before uploading again; contact support if it remains pending.");
+    }
+    if (!ready.length) {
+        const legacy = await getDoc(doc(db, "applicantDocuments", user.uid));
+        if (legacy.exists()) {
+            showAlert("An existing document record is present, but no ready uploaded set was returned. Metadata alone does not confirm a file upload.", "warning");
+        }
+    }
+}
 
-    if (!file) {
-
-        statusElement.className =
-            "badge bg-secondary status-badge";
-
-        statusElement.textContent =
-            "Not selected";
-
-        infoElement.textContent = "";
-
+inputs.forEach(input => input.addEventListener("change", updateSelection));
+saveDocumentsBtn.disabled = true;
+onAuthStateChanged(auth, async user => {
+    currentUser = null;
+    setBusy(uploading);
+    if (!user || !user.emailVerified) {
+        window.location.href = "login.html";
         return;
     }
-
-
-    statusElement.className =
-        "badge bg-success status-badge";
-
-    statusElement.textContent =
-        "Selected";
-
-    infoElement.textContent =
-        `${file.name} — ${formatFileSize(file.size)}`;
-}
-
-
-function validateFile(
-    file,
-    allowedTypes,
-    documentName
-) {
-
-    if (!file) {
-
-        throw new Error(
-            `${documentName} is required.`
-        );
-    }
-
-
-    if (file.size > MAX_FILE_SIZE) {
-
-        throw new Error(
-            `${documentName} must be 5 MB or smaller.`
-        );
-    }
-
-
-    if (!allowedTypes.includes(file.type)) {
-
-        throw new Error(
-            `${documentName} has an unsupported file type.`
-        );
-    }
-
-
-    return true;
-}
-
-
-function createDocumentMetadata(
-    file,
-    documentType
-) {
-
-    return {
-
-        documentType: documentType,
-
-        fileName: file.name,
-
-        fileSize: file.size,
-
-        mimeType: file.type,
-
-        storageMode: "firebase-storage",
-
-        validationStatus: "uploaded",
-
-        uploaded: true,
-
-        updatedAt: serverTimestamp()
-
-    };
-}
-
-
-async function loadExistingDocuments(uid) {
-
     try {
-
-        const documentsRef =
-            doc(db, "applicantDocuments", uid);
-
-        const snapshot =
-            await getDoc(documentsRef);
-
-
-        if (!snapshot.exists()) {
-            return;
+        const snapshot = await getDoc(doc(db, "users", user.uid));
+        if (auth.currentUser !== user) return;
+        if (!snapshot.exists()) { window.location.href = "login.html"; return; }
+        const profile = snapshot.data();
+        if (profile.role !== "applicant" || profile.accountStatus !== "active") {
+            window.location.href = "login.html"; return;
         }
-
-
-        const data = snapshot.data();
-
-        savedDocumentsSection.classList.remove(
-            "d-none"
-        );
-
-
-        const cvName =
-            data.cv?.fileName || "Not recorded";
-
-        const idName =
-            data.identification?.fileName ||
-            "Not recorded";
-
-        const certificateName =
-            data.certificate?.fileName ||
-            "Not recorded";
-
-
-        savedDocumentsList.innerHTML = `
-            <div class="list-group">
-
-                <div class="list-group-item">
-                    <strong>CV:</strong>
-                    ${escapeHtml(cvName)}
-                </div>
-
-                <div class="list-group-item">
-                    <strong>Identification:</strong>
-                    ${escapeHtml(idName)}
-                </div>
-
-                <div class="list-group-item">
-                    <strong>Certificate:</strong>
-                    ${escapeHtml(certificateName)}
-                </div>
-
-                <div class="list-group-item">
-                    <strong>Status:</strong>
-                    Uploaded to Firebase Storage
-                </div>
-
-            </div>
-        `;
-
+        if (profile.profileCompleted !== true) { window.location.href = "profile.html"; return; }
+        currentUser = user;
+        // Reconcile previous uploads before enabling another submission.
+        await loadExistingDocuments(user);
+        uncertainOutcome = false;
+        setBusy(uploading);
     } catch (error) {
-
-        console.error(
-            "Error loading document metadata:",
-            error
-        );
+        uncertainOutcome = true;
+        setBusy(uploading);
+        showAlert(error.message || "Unable to load the document centre. Reload to try again.");
+    } finally {
+        element("loadingScreen").classList.add("d-none");
+        element("documentPage").classList.remove("d-none");
     }
-}
+});
 
-
-function escapeHtml(value) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-cvFile.addEventListener(
-    "change",
-    () => {
-
-        setSelectedStatus(
-            cvStatus,
-            cvInfo,
-            cvFile.files[0]
-        );
+documentForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (uploading || uncertainOutcome) return;
+    alertBox.classList.add("d-none");
+    const user = currentUser;
+    if (!user || auth.currentUser !== user) {
+        showAlert("Your session has expired. Please log in again."); return;
     }
-);
-
-
-idFile.addEventListener(
-    "change",
-    () => {
-
-        setSelectedStatus(
-            idStatus,
-            idInfo,
-            idFile.files[0]
-        );
-    }
-);
-
-
-certificateFile.addEventListener(
-    "change",
-    () => {
-
-        setSelectedStatus(
-            certificateStatus,
-            certificateInfo,
-            certificateFile.files[0]
-        );
-    }
-);
-
-
-onAuthStateChanged(
-    auth,
-    async (user) => {
-
-        if (!user) {
-
-            window.location.href =
-                "login.html";
-
-            return;
+    const files = Object.fromEntries(KINDS.map((kind, index) => [kind, inputs[index].files[0]]));
+    try { validateFiles(files); } catch (error) { showAlert(error.message, "warning"); return; }
+    setBusy(true);
+    try {
+        const body = new FormData();
+        KINDS.forEach(kind => body.append(kind, files[kind]));
+        const manifest = await apiRequest(user, "POST", body);
+        if (!isReadySet(manifest)) {
+            uncertainOutcome = true;
+            throw new Error("The backend did not confirm a clean, ready document set. Reload to check saved sets before retrying.");
         }
-
-
-        if (!user.emailVerified) {
-
-            window.location.href =
-                "login.html";
-
-            return;
-        }
-
-
-        try {
-
-            const userRef =
-                doc(db, "users", user.uid);
-
-            const snapshot =
-                await getDoc(userRef);
-
-
-            if (!snapshot.exists()) {
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
-
-
-            const userData =
-                snapshot.data();
-
-            if (userData.profileCompleted !== true) {
-                window.location.href =
-                    "profile.html";
-                return;
-            }
-
-            if (
-                userData.role !== "applicant" ||
-                userData.accountStatus !== "active"
-            ) {
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
-
-
-            currentUser = user;
-            currentUserData = userData;
-
-
-            await loadExistingDocuments(
-                user.uid
-            );
-
-
-            loadingScreen.classList.add(
-                "d-none"
-            );
-
-            documentPage.classList.remove(
-                "d-none"
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Document page authentication error:",
-                error
-            );
-
-
-            loadingScreen.classList.add(
-                "d-none"
-            );
-
-            documentPage.classList.remove(
-                "d-none"
-            );
-
-
-            showAlert(
-                "Unable to load the document centre."
-            );
-        }
+        displaySets([manifest]);
+        documentForm.reset();
+        updateSelection();
+        showAlert(`Upload succeeded. Document set ID: ${manifest.setId}. All three files were scanned and stored privately. Authenticity has not been verified.`, "success");
+    } catch (error) {
+        showAlert(error.message || "Upload failed. No successful upload has been confirmed.");
+    } finally {
+        setBusy(false);
     }
-);
-
-
-documentForm.addEventListener(
-    "submit",
-    async (event) => {
-
-        event.preventDefault();
-
-        hideAlert();
-
-
-        if (!currentUser) {
-
-            showAlert(
-                "Your session has expired. Please log in again."
-            );
-
-            return;
-        }
-
-
-        const cv =
-            cvFile.files[0];
-
-        const identification =
-            idFile.files[0];
-
-        const certificate =
-            certificateFile.files[0];
-
-
-        try {
-
-            validateFile(
-                cv,
-                ["application/pdf"],
-                "Curriculum Vitae"
-            );
-
-
-            validateFile(
-                identification,
-                [
-                    "application/pdf",
-                    "image/jpeg",
-                    "image/png"
-                ],
-                "Identification document"
-            );
-
-
-            validateFile(
-                certificate,
-                [
-                    "application/pdf",
-                    "image/jpeg",
-                    "image/png"
-                ],
-                "Qualification certificate"
-            );
-
-
-        } catch (error) {
-
-            showAlert(
-                error.message,
-                "warning"
-            );
-
-            return;
-        }
-
-
-        saveDocumentsBtn.disabled = true;
-
-        saveDocumentsBtn.textContent =
-            "Uploading Documents...";
-
-        const metadataRef = doc(
-            db,
-            "applicantDocuments",
-            currentUser.uid
-        );
-        let previousData = {};
-        const uploadedPaths = [];
-        let metadataSaved = false;
-
-        try {
-            const previousSnapshot = await getDoc(metadataRef);
-            previousData = previousSnapshot.exists()
-                ? previousSnapshot.data()
-                : {};
-
-            const uploadApplicantDocument = async (file, type) => {
-                const path =
-                    `applicantDocuments/${currentUser.uid}/${type}/${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                const result = await uploadPrivateFile(file, path);
-
-                if (!result.success) {
-                    throw new Error(
-                        result.error || `Unable to upload ${type}.`
-                    );
-                }
-
-                uploadedPaths.push(path);
-                return {
-                    ...createDocumentMetadata(file, type),
-                    storagePath: path
-                };
-            };
-
-            const uploadResults = await Promise.allSettled([
-                    uploadApplicantDocument(cv, "cv"),
-                    uploadApplicantDocument(identification, "identification"),
-                    uploadApplicantDocument(
-                        certificate,
-                        "qualification_certificate"
-                    )
-                ]);
-            const failedUpload = uploadResults.find(
-                result => result.status === "rejected"
-            );
-            if (failedUpload) {
-                throw failedUpload.reason;
-            }
-            const [
-                cvMetadata,
-                identificationMetadata,
-                certificateMetadata
-            ] = uploadResults.map(result => result.value);
-
-            const userRef =
-                doc(
-                    db,
-                    "users",
-                    currentUser.uid
-                );
-
-
-            const batch = writeBatch(db);
-            batch.set(metadataRef, {
-                applicantId: currentUser.uid,
-                cv: cvMetadata,
-                identification: identificationMetadata,
-                certificate: certificateMetadata,
-                documentsValidated: true,
-                updatedAt: serverTimestamp()
-            });
-            batch.update(userRef, {
-                documentsUploaded: true,
-                documentStorageMode: "firebase-storage",
-                documentsUpdatedAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            });
-            appendAuditEvent(batch, {
-                action: "applicant.documents_uploaded",
-                actorUid: currentUser.uid,
-                actorRole: "applicant",
-                targetApplicantId: currentUser.uid,
-                region: currentUserData.region || "",
-                entityType: "applicantDocuments",
-                entityId: currentUser.uid,
-                details: {
-                    documentTypes: [
-                        "cv",
-                        "identification",
-                        "qualification_certificate"
-                    ]
-                }
-            });
-            await batch.commit();
-            metadataSaved = true;
-
-            await loadExistingDocuments(
-                currentUser.uid
-            );
-
-            let oldFileCleanupFailed = false;
-            for (const key of [
-                "cv",
-                "identification",
-                "certificate"
-            ]) {
-                const oldPath = previousData[key]?.storagePath;
-                const newPath = key === "certificate"
-                    ? certificateMetadata.storagePath
-                    : key === "cv"
-                        ? cvMetadata.storagePath
-                        : identificationMetadata.storagePath;
-                if (oldPath && oldPath !== newPath) {
-                    const result = await deleteFile(oldPath);
-                    if (!result.success) {
-                        oldFileCleanupFailed = true;
-                        console.error(
-                            "Unable to remove replaced document:",
-                            result.error
-                        );
-                    }
-                }
-            }
-
-            showAlert(
-                oldFileCleanupFailed
-                    ? "Your new documents were uploaded, but an older file could not be removed. Contact support to clean it up."
-                    : "Your documents were uploaded securely and saved successfully.",
-                oldFileCleanupFailed ? "warning" : "success"
-            );
-
-            saveDocumentsBtn.disabled =
-                false;
-
-            saveDocumentsBtn.textContent =
-                "Upload and Save Documents";
-
-
-        } catch (error) {
-
-            console.error(
-                "Error uploading applicant documents:",
-                error
-            );
-
-            if (!metadataSaved) {
-                await Promise.all(
-                    uploadedPaths.map(async path => {
-                        const result = await deleteFile(path);
-                        if (!result.success) {
-                            console.error(
-                                "Unable to clean up incomplete upload:",
-                                result.error
-                            );
-                        }
-                    })
-                );
-            }
-
-            showAlert(
-                error.message ||
-                "Unable to upload your documents. Please try again."
-            );
-
-
-            saveDocumentsBtn.disabled =
-                false;
-
-            saveDocumentsBtn.textContent =
-                "Upload and Save Documents";
-        }
-    }
-);
-
-
-dashboardBtn.addEventListener(
-    "click",
-    () => {
-
-        window.location.href =
-            "dashboard.html";
-    }
-);
+});
+element("dashboardBtn").addEventListener("click", () => { window.location.href = "dashboard.html"; });

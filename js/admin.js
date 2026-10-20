@@ -12,6 +12,8 @@ import {
 import {
     signInWithEmailAndPassword,
     signOut,
+    sendEmailVerification,
+    sendPasswordResetEmail,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -24,10 +26,8 @@ import {
     doc,
     getDoc,
     runTransaction,
-    writeBatch,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { appendAuditEvent } from "./audit.js";
 
 
 // ============================================================
@@ -40,12 +40,68 @@ const ALLOWED_ADMIN_ROLES = [
     "super_admin"
 ];
 
+let adminAuthenticationPending = false;
+const emailCooldowns = new Map();
+
+function reserveEmailRequest(action) {
+    const key = "nampol-admin-email-" + action;
+    let lastRequest = emailCooldowns.get(key) || 0;
+    try {
+        lastRequest = Math.max(lastRequest, Number(sessionStorage.getItem(key)) || 0);
+    } catch {
+        // In-memory throttling still works when browser storage is unavailable.
+    }
+    const remaining = Math.ceil((lastRequest + 60000 - Date.now()) / 1000);
+    if (remaining > 0) {
+        return `Please wait ${remaining} seconds before requesting another email.`;
+    }
+    const now = Date.now();
+    emailCooldowns.set(key, now);
+    try {
+        sessionStorage.setItem(key, String(now));
+    } catch {}
+    return "";
+}
+
+export async function resendAdminVerificationEmail(email, password) {
+    return loginAdmin(email, password, true);
+}
+
+export async function resetAdminPassword(email) {
+    const throttleError = reserveEmailRequest("reset");
+    if (throttleError) return { success: false, error: throttleError };
+    const message = "If an account is eligible for password reset, a reset email will be sent. Check your inbox and spam folder.";
+    try {
+        await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+        if (error.code === "auth/invalid-email") {
+            return { success: false, error: "Please enter a valid email address." };
+        }
+        if (error.code === "auth/network-request-failed") {
+            return { success: false, error: "Network error. Please check your internet connection and try again later." };
+        }
+        // Account-specific failures and Firebase throttling use the same neutral response.
+    }
+    return { success: true, message };
+}
+
 
 // ============================================================
 // LOGIN ADMIN
 // ============================================================
 
-export async function loginAdmin(email, password) {
+export async function loginAdmin(email, password, resendVerification = false) {
+
+    if (adminAuthenticationPending) {
+        return { success: false, error: "An administrator authentication request is already in progress." };
+    }
+    if (resendVerification) {
+        const throttleError = reserveEmailRequest("verification");
+        if (throttleError) return { success: false, error: throttleError };
+    }
+    adminAuthenticationPending = true;
+    let authenticated = false;
+    let keepSession = false;
 
     try {
 
@@ -63,25 +119,13 @@ export async function loginAdmin(email, password) {
 
 
         const user = userCredential.user;
+        authenticated = true;
 
 
         // ----------------------------------------------------
         // STEP 2:
         // Require verified email
         // ----------------------------------------------------
-
-        if (!user.emailVerified) {
-
-            await signOut(auth);
-
-            return {
-                success: false,
-                error:
-                    "Your email address has not been verified. " +
-                    "Please verify your email before logging in."
-            };
-        }
-
 
         // ----------------------------------------------------
         // STEP 3:
@@ -178,6 +222,23 @@ export async function loginAdmin(email, password) {
         // Successful admin authentication
         // ----------------------------------------------------
 
+        if (resendVerification) {
+            if (user.emailVerified) {
+                return { success: true, message: "Your email is already verified. Please log in to continue." };
+            }
+            await sendEmailVerification(user);
+            return {
+                success: true,
+                message: "Verification email sent. Check your inbox and spam folder, verify your email, then log in again."
+            };
+        }
+        if (!user.emailVerified) {
+            return {
+                success: false,
+                error: "Your email address has not been verified. Use Resend verification email with your email and password, then verify your email before logging in."
+            };
+        }
+        keepSession = true;
         return {
 
             success: true,
@@ -221,7 +282,9 @@ export async function loginAdmin(email, password) {
 
 
         let message =
-            "Unable to login. Please try again.";
+            resendVerification
+                ? "Unable to send a verification email. Please try again later."
+                : "Unable to login. Please try again.";
 
 
         // ----------------------------------------------------
@@ -280,6 +343,12 @@ export async function loginAdmin(email, password) {
             success: false,
             error: message
         };
+    } finally {
+        try {
+            if (authenticated && !keepSession) await signOut(auth);
+        } finally {
+            adminAuthenticationPending = false;
+        }
     }
 }
 
@@ -294,7 +363,7 @@ export async function getCurrentAdmin() {
         auth.currentUser;
 
 
-    if (!user) {
+    if (!user || !user.emailVerified) {
 
         return {
             success: false,
@@ -569,7 +638,7 @@ export function redirectIfAdminLoggedIn() {
         auth,
         async function (user) {
 
-            if (!user) {
+            if (!user || adminAuthenticationPending) {
                 return;
             }
 
@@ -603,6 +672,8 @@ export function redirectIfAdminLoggedIn() {
 
 
                 if (
+                    !adminAuthenticationPending &&
+                    auth.currentUser?.uid === user.uid &&
                     adminData.active === true &&
                     ALLOWED_ADMIN_ROLES.includes(
                         adminData.role
@@ -681,11 +752,55 @@ export async function getAdminAuditEvents(admin) {
             ...eventSnapshot.data()
         }))
         .sort((left, right) => {
-            const leftTime = left.createdAt?.seconds || 0;
-            const rightTime = right.createdAt?.seconds || 0;
+            const leftTime = left.timestamp?.seconds || left.createdAt?.seconds || 0;
+            const rightTime = right.timestamp?.seconds || right.createdAt?.seconds || 0;
             return rightTime - leftTime;
         })
         .slice(0, 100);
+}
+
+
+export async function startApplicationReview(applicationId, admin) {
+    const applicationRef = doc(db, "applications", applicationId);
+    await runTransaction(db, async transaction => {
+        const applicationSnapshot = await transaction.get(applicationRef);
+        if (!applicationSnapshot.exists()) {
+            throw new Error("This application no longer exists.");
+        }
+
+        const application = applicationSnapshot.data();
+        if (application.status !== "Submitted") {
+            throw new Error("Only submitted applications can be started for review.");
+        }
+        if (
+            admin.role !== "super_admin" &&
+            application.region !== admin.region
+        ) {
+            throw new Error("You are not authorized to review applications outside your region.");
+        }
+
+        transaction.update(applicationRef, {
+            status: "Under Review",
+            reviewStartedAt: serverTimestamp(),
+            reviewedBy: admin.uid,
+            reviewedByStaffNumber: admin.staffNumber || "",
+            updatedAt: serverTimestamp()
+        });
+
+        // Must match the canonical ID enforced by hasReviewAudit() in the rules.
+        const auditRef = doc(db, "auditLogs", `${applicationId}__REVIEW_STARTED`);
+        transaction.set(auditRef, {
+            action: "REVIEW_STARTED",
+            adminId: admin.uid,
+            staffNumber: admin.staffNumber || "",
+            applicationId,
+            applicationReference: application.applicationReference || applicationId,
+            applicantId: application.applicantId || "",
+            reason: "",
+            timestamp: serverTimestamp(),
+            region: application.region || ""
+        });
+    });
 }
 
 
@@ -700,10 +815,11 @@ export async function reviewApplication(
     }
 
     const cleanReason = reason.trim();
-    if (!cleanReason || cleanReason.length > 1000) {
-        throw new Error(
-            "Enter a decision reason of up to 1,000 characters."
-        );
+    if (decision === "Denied" && !cleanReason) {
+        throw new Error("A denial reason is required.");
+    }
+    if (cleanReason.length > 1000) {
+        throw new Error("Enter a decision reason of up to 1,000 characters.");
     }
 
     const applicationRef = doc(db, "applications", applicationId);
@@ -720,13 +836,8 @@ export async function reviewApplication(
             .trim()
             .toLowerCase();
 
-        if (
-            ["approved", "denied", "rejected", "shortlisted"]
-                .includes(status)
-        ) {
-            throw new Error(
-                "This application already has a final decision."
-            );
+        if (status !== "under review") {
+            throw new Error("Start the review before recording a decision.");
         }
 
         if (
@@ -747,41 +858,21 @@ export async function reviewApplication(
             updatedAt: serverTimestamp()
         });
 
-        appendAuditEvent(transaction, {
-            action: `application.${decision.toLowerCase()}`,
-            actorUid: admin.uid,
-            actorRole: admin.role,
-            actorStaffNumber: admin.staffNumber || "",
-            targetApplicantId: application.applicantId,
-            region: application.region || "",
-            entityType: "application",
-            entityId: applicationId,
-            details: {
-                applicationReference:
-                    application.applicationReference || applicationId,
-                decision,
-                reason: cleanReason
-            }
+        const action = decision === "Approved" ? "APPLICATION_APPROVED" : "APPLICATION_DENIED";
+        const auditRef = doc(db, "auditLogs", `${applicationId}__${action}`);
+        transaction.set(auditRef, {
+            action,
+            adminId: admin.uid,
+            staffNumber: admin.staffNumber || "",
+            applicationId,
+            applicationReference: application.applicationReference || applicationId,
+            applicantId: application.applicantId || "",
+            reason: cleanReason,
+            timestamp: serverTimestamp(),
+            region: application.region || ""
         });
     });
 }
-
-export async function recordDocumentAccess(admin, applicantId, region) {
-    const batch = writeBatch(db);
-    appendAuditEvent(batch, {
-        action: "admin.documents_accessed",
-        actorUid: admin.uid,
-        actorRole: admin.role,
-        actorStaffNumber: admin.staffNumber || "",
-        targetApplicantId: applicantId,
-        region: region || "",
-        entityType: "applicantDocuments",
-        entityId: applicantId,
-        details: {}
-    });
-    await batch.commit();
-}
-
 
 // ============================================================
 // GET REGIONAL STATISTICS
@@ -798,64 +889,30 @@ export async function getRegionalStats(region, role = "admin") {
 
         const applicationsReference =
             collection(db, "applications");
-        const usersReference =
-            collection(db, "users");
+        const applicationsQuery = role === "super_admin"
+            ? query(applicationsReference)
+            : query(
+                applicationsReference,
+                where("region", "==", region)
+            );
 
-        const applicationsQuery =
-            region
-                ? query(
-                    applicationsReference,
-                    where("region", "==", region)
-                )
-                : query(applicationsReference);
-
-        const usersQuery =
-            region
-                ? query(
-                    usersReference,
-                    where("region", "==", region)
-                )
-                : role === "super_admin"
-                    ? query(usersReference)
-                    : null;
-
-        const [applicationsSnapshot, usersSnapshot] =
-            await Promise.all([
-                getDocs(applicationsQuery),
-                usersQuery
-                    ? getDocs(usersQuery)
-                    : Promise.resolve(null)
-            ]);
+        const applicationsSnapshot = await getDocs(applicationsQuery);
 
         const statuses = applicationsSnapshot.docs.map(
             application => String(application.data().status || "")
                 .trim()
                 .toLowerCase()
         );
-        const pendingCount = statuses.filter(status =>
-            ["submitted", "under review", "pending", "in progress"]
-                .includes(status)
-        ).length;
-        const shortlistedCount = statuses.filter(status =>
-            ["approved", "shortlisted"].includes(status)
-        ).length;
-
+        const countStatus = status =>
+            statuses.filter(value => value === status).length;
 
         return {
-
             success: true,
-
-            total:
-                applicationsSnapshot.size,
-
-            pending:
-                pendingCount,
-
-            shortlisted:
-                shortlistedCount,
-
-            users:
-                usersSnapshot?.size ?? 0
+            total: applicationsSnapshot.size,
+            submitted: countStatus("submitted"),
+            underReview: countStatus("under review"),
+            approved: countStatus("approved"),
+            denied: countStatus("denied")
         };
 
 

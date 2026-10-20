@@ -127,6 +127,36 @@
             font-size: 0.9rem;
         }
 
+        .application-review-modal .modal-header {
+            background: #16213e;
+            color: #fff;
+        }
+
+        .application-review-modal .btn-close {
+            filter: invert(1) grayscale(100%);
+        }
+
+        .review-detail {
+            height: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.65rem;
+            background: #fff;
+        }
+
+        .review-detail-label {
+            display: block;
+            margin-bottom: 0.2rem;
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        .review-detail-value {
+            margin: 0;
+            overflow-wrap: anywhere;
+            font-weight: 600;
+        }
+
 
         /* =====================================================
            ADMIN DETAILS
@@ -495,123 +525,37 @@
                      STATISTICS
                 ============================================== -->
 
-                <div class="row g-4 mb-4">
-
-
-                    <!-- Total Applications -->
-
-                    <div class="col-md-6 col-lg-3">
-
-                        <div class="card stat-card h-100">
-
-                            <div class="card-body">
-
-                                <div class="stat-number"
-                                     id="totalApplications">
-
-                                    0
-
-                                </div>
-
-                                <div class="stat-label">
-
-                                    Total Applications
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
+                <div class="row g-4 mb-4" aria-label="Application statistics">
+                    <div class="col-6 col-xl">
+                        <div class="card stat-card h-100"><div class="card-body">
+                            <div class="stat-number" id="totalApplications">0</div>
+                            <div class="stat-label">Total Applications</div>
+                        </div></div>
                     </div>
-
-
-
-                    <!-- Pending -->
-
-                    <div class="col-md-6 col-lg-3">
-
-                        <div class="card stat-card h-100">
-
-                            <div class="card-body">
-
-                                <div class="stat-number"
-                                     id="pendingApplications">
-
-                                    0
-
-                                </div>
-
-                                <div class="stat-label">
-
-                                    Pending Review
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
+                    <div class="col-6 col-xl">
+                        <div class="card stat-card h-100"><div class="card-body">
+                            <div class="stat-number" id="submittedApplications">0</div>
+                            <div class="stat-label">Submitted</div>
+                        </div></div>
                     </div>
-
-
-
-                    <!-- Shortlisted -->
-
-                    <div class="col-md-6 col-lg-3">
-
-                        <div class="card stat-card h-100">
-
-                            <div class="card-body">
-
-                                <div class="stat-number"
-                                     id="shortlistedApplications">
-
-                                    0
-
-                                </div>
-
-                                <div class="stat-label">
-
-                                    Approved
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
+                    <div class="col-6 col-xl">
+                        <div class="card stat-card h-100"><div class="card-body">
+                            <div class="stat-number" id="underReviewApplications">0</div>
+                            <div class="stat-label">Under Review</div>
+                        </div></div>
                     </div>
-
-
-
-                    <!-- Users -->
-
-                    <div class="col-md-6 col-lg-3">
-
-                        <div class="card stat-card h-100">
-
-                            <div class="card-body">
-
-                                <div class="stat-number"
-                                     id="registeredUsers">
-
-                                    0
-
-                                </div>
-
-                                <div class="stat-label">
-
-                                    Registered Applicants
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
+                    <div class="col-6 col-xl">
+                        <div class="card stat-card h-100"><div class="card-body">
+                            <div class="stat-number" id="approvedApplications">0</div>
+                            <div class="stat-label">Approved</div>
+                        </div></div>
                     </div>
-
+                    <div class="col-6 col-xl">
+                        <div class="card stat-card h-100"><div class="card-body">
+                            <div class="stat-number" id="deniedApplications">0</div>
+                            <div class="stat-label">Denied</div>
+                        </div></div>
+                    </div>
                 </div>
 
                 <section class="card mb-4" id="applicationReviewSection">
@@ -627,23 +571,40 @@
                             <table class="table table-hover align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Applicant</th>
+                                        <th>Application Reference</th>
+                                        <th>Applicant Name</th>
                                         <th>Position</th>
+                                        <th>Region</th>
                                         <th>Submitted</th>
                                         <th>Status</th>
-                                        <th>Documents</th>
-                                        <th>Decision and Reason</th>
+                                        <th>Review</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminApplicationsBody">
                                     <tr>
-                                        <td colspan="6" class="text-center">
+                                        <td colspan="7" class="text-center">
                                             Loading applications...
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </section>
+
+                <section class="card mb-4" id="vacancyManagementSection">
+                    <div class="card-body">
+                        <h4>Manage vacancies</h4>
+                        <p class="text-muted">Only active administrators can publish vacancies. Open, published vacancies appear on the public home page and applicant dashboard.</p>
+                        <div id="vacancyAlert" class="alert d-none" role="status"></div>
+                        <form id="vacancyForm" class="row g-3 mb-4">
+                            <div class="col-md-6"><label class="form-label" for="jobTitle">Position title</label><input class="form-control" id="jobTitle" maxlength="120" required></div>
+                            <div class="col-md-6"><label class="form-label" for="jobRegion">Region</label><input class="form-control" id="jobRegion" maxlength="80" required></div>
+                            <div class="col-12"><label class="form-label" for="jobDescription">Description</label><textarea class="form-control" id="jobDescription" maxlength="2000" rows="2" required></textarea></div>
+                            <div class="col-12"><label class="form-label" for="jobRequirements">Requirements (for applicants and reviewer context)</label><textarea class="form-control" id="jobRequirements" maxlength="2000" rows="2"></textarea></div>
+                            <div class="col-12"><button class="btn btn-primary" type="submit" disabled>Publish vacancy</button> <button class="btn btn-secondary d-none" id="cancelVacancyEdit" type="button">Cancel edit</button></div>
+                        </form>
+                        <h5>Current vacancies</h5><div id="adminJobsList">Loading vacancies…</div>
                     </div>
                 </section>
 
@@ -992,6 +953,55 @@
 
 
 
+<div class="modal fade application-review-modal" id="applicationReviewModal" tabindex="-1" aria-labelledby="applicationReviewModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="applicationReviewModalTitle">Application Review</h5>
+                    <div class="small text-white-50" id="reviewModalReference"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reviewModalAlert" class="alert d-none" role="alert"></div>
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Applicant name</span><p class="review-detail-value" id="reviewApplicantName"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Applicant email</span><p class="review-detail-value" id="reviewApplicantEmail"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Position</span><p class="review-detail-value" id="reviewPosition"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Station preference</span><p class="review-detail-value" id="reviewStationPreference"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Region</span><p class="review-detail-value" id="reviewRegion"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Qualification</span><p class="review-detail-value" id="reviewQualification"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Field of study</span><p class="review-detail-value" id="reviewFieldOfStudy"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Institution</span><p class="review-detail-value" id="reviewInstitution"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Graduation year</span><p class="review-detail-value" id="reviewGraduationYear"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Document validation</span><p class="review-detail-value" id="reviewDocumentStatus"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Verification status</span><p class="review-detail-value" id="reviewVerificationStatus"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Stored screening marker</span><p class="review-detail-value" id="reviewAiStatus"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Submitted date</span><p class="review-detail-value" id="reviewSubmittedAt"></p></div></div>
+                    <div class="col-md-6"><div class="review-detail"><span class="review-detail-label">Current status</span><p class="review-detail-value" id="reviewCurrentStatus"></p></div></div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <strong>Screening checklist (review aid only)</strong>
+                    <p class="mb-1" id="reviewScreeningChecklist">Loading checklist…</p>
+                    <small>The CV file is not text-extracted or scored. This checklist checks file presence and the structured fields/documents already recorded. It never changes application status or decides eligibility.</small>
+                </div>
+                <div class="mt-4 d-none" id="decisionReasonGroup">
+                    <label class="form-label text-dark" for="decisionReasonInput">Decision comment or reason</label>
+                    <textarea class="form-control" id="decisionReasonInput" rows="3" maxlength="1000" aria-describedby="decisionReasonHelp"></textarea>
+                    <div class="form-text" id="decisionReasonHelp">A reason is required to deny an application.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary d-none" id="startReviewBtn">Start Review</button>
+                <button type="button" class="btn btn-success d-none" id="approveApplicationBtn">Approve</button>
+                <button type="button" class="btn btn-danger d-none" id="denyApplicationBtn">Deny</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- =========================================================
      FIREBASE ADMIN JAVASCRIPT
 ========================================================= -->
@@ -1004,15 +1014,11 @@
         getRegionalStats,
         getAdminApplications,
         getAdminAuditEvents,
-        reviewApplication,
-        recordDocumentAccess
+        startApplicationReview,
+        reviewApplication
     } from "../js/admin.js";
-    import { db } from "../js/firebase-config.js";
-    import {
-        doc,
-        getDoc
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getFileUrl } from "../js/storage.js";
+    import { auth, db } from "../js/firebase-config.js";
+    import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, where, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
     // ========================================================
@@ -1046,7 +1052,16 @@
         document.getElementById("auditTrailBody");
     const auditTrailMessage =
         document.getElementById("auditTrailMessage");
+    const reviewModalElement = document.getElementById("applicationReviewModal");
+    const reviewModal = new bootstrap.Modal(reviewModalElement);
+    const reviewModalAlert = document.getElementById("reviewModalAlert");
+    const decisionReasonInput = document.getElementById("decisionReasonInput");
+    const decisionReasonGroup = document.getElementById("decisionReasonGroup");
+    const startReviewButton = document.getElementById("startReviewBtn");
+    const approveApplicationButton = document.getElementById("approveApplicationBtn");
+    const denyApplicationButton = document.getElementById("denyApplicationBtn");
     let currentAdmin = null;
+    let selectedApplication = null;
 
 
     function showMessage(element, message, type = "danger") {
@@ -1079,60 +1094,122 @@
     }
 
 
-    async function showApplicantDocuments(application, button, container) {
-        button.disabled = true;
-        button.textContent = "Loading...";
-        container.replaceChildren();
+    function displayValue(value) {
+        if (value === null || value === undefined || String(value).trim() === "") {
+            return "Not provided";
+        }
+        return String(value);
+    }
 
+
+    function setReviewDetail(id, value) {
+        document.getElementById(id).textContent = displayValue(value);
+    }
+
+
+    async function openApplicationReview(application) {
+        selectedApplication = application;
+        const reference = application.applicationReference || application.id;
+        const status = String(application.status || "Not provided");
+
+        document.getElementById("reviewModalReference").textContent =
+            `Reference: ${reference}`;
+        setReviewDetail("reviewApplicantName", application.applicantName);
+        setReviewDetail("reviewApplicantEmail", application.applicantEmail);
+        setReviewDetail("reviewPosition", application.position);
+        setReviewDetail("reviewStationPreference", application.stationPreference);
+        setReviewDetail("reviewRegion", application.region);
+        setReviewDetail("reviewQualification", application.qualification);
+        setReviewDetail("reviewFieldOfStudy", application.fieldOfStudy);
+        setReviewDetail("reviewInstitution", application.institution);
+        setReviewDetail("reviewGraduationYear", application.graduationYear);
+        setReviewDetail(
+            "reviewDocumentStatus",
+            application.documentsValidated === true
+                ? "Validated"
+                : application.documentsValidated === false
+                    ? "Not validated"
+                    : "Not provided"
+        );
+        setReviewDetail("reviewVerificationStatus", application.verificationStatus);
+        setReviewDetail("reviewAiStatus", application.aiScreeningStatus);
+        const checklist = document.getElementById("reviewScreeningChecklist");
+        checklist.textContent = "Checking uploaded file and recorded application fields…";
         try {
-            const snapshot = await getDoc(
-                doc(db, "applicantDocuments", application.applicantId)
-            );
-            if (!snapshot.exists()) {
-                container.textContent = "No uploaded documents were found.";
-                return;
-            }
-
-            const documents = snapshot.data();
-            await recordDocumentAccess(
-                currentAdmin,
-                application.applicantId,
-                application.region
-            );
-            for (const [key, label] of [
-                ["cv", "CV"],
-                ["identification", "Identification"],
-                ["certificate", "Qualification certificate"]
-            ]) {
-                const file = documents[key];
-                if (!file?.storagePath) {
-                    continue;
-                }
-
-                const result = await getFileUrl(file.storagePath);
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-
-                const link = document.createElement("a");
-                link.href = result.url;
-                link.target = "_blank";
-                link.rel = "noopener noreferrer";
-                link.className = "d-block";
-                link.textContent = `Open ${label}: ${file.fileName || label}`;
-                container.appendChild(link);
-            }
-
-            if (!container.childElementCount) {
-                container.textContent = "No uploaded documents were found.";
-            }
+            const documentSnapshot = await getDoc(doc(db, "applicantDocuments", application.applicantId));
+            const cvRecord = documentSnapshot.exists() ? documentSnapshot.data().cv : null;
+            const cvState = !cvRecord ? "no CV record" : cvRecord.uploaded === true
+                ? "file uploaded" : "metadata recorded; file not stored";
+            const profileComplete = Boolean(String(application.qualification || "").trim()
+                && String(application.fieldOfStudy || "").trim()
+                && String(application.graduationYear || "").trim());
+            checklist.textContent = `CV: ${cvState}. Qualification, field of study, and graduation year: ${profileComplete ? "all recorded" : "one or more missing"}. Required application documents validated: ${application.documentsValidated === true ? "yes" : "no"}.`;
         } catch (error) {
-            console.error("Unable to load applicant documents:", error);
-            container.textContent =
-                "Unable to open documents. Check Storage rules and try again.";
+            checklist.textContent = "Checklist could not be loaded. Review the applicant's documents and profile directly.";
+            console.warn("Screening checklist unavailable", error);
+        }
+        setReviewDetail("reviewSubmittedAt", formatTimestamp(application.submittedAt));
+        setReviewDetail("reviewCurrentStatus", status);
+
+        const isSubmitted = status === "Submitted";
+        const isUnderReview = status === "Under Review";
+        startReviewButton.classList.toggle("d-none", !isSubmitted);
+        decisionReasonGroup.classList.toggle("d-none", !isUnderReview);
+        approveApplicationButton.classList.toggle("d-none", !isUnderReview);
+        denyApplicationButton.classList.toggle("d-none", !isUnderReview);
+        decisionReasonInput.value = "";
+        reviewModalAlert.classList.add("d-none");
+        reviewModal.show();
+    }
+
+
+    async function completeReviewAction(action, button) {
+        if (!selectedApplication) {
+            return;
+        }
+
+        const reason = decisionReasonInput.value.trim();
+        if (action === "Denied" && !reason) {
+            showMessage(reviewModalAlert, "A denial reason is required.");
+            decisionReasonInput.focus();
+            return;
+        }
+
+        button.disabled = true;
+        try {
+            if (action === "Under Review") {
+                await startApplicationReview(selectedApplication.id, currentAdmin);
+            } else {
+                await reviewApplication(
+                    selectedApplication.id,
+                    action,
+                    reason,
+                    currentAdmin
+                );
+            }
+
+            const reference = selectedApplication.applicationReference
+                || selectedApplication.id;
+            reviewModal.hide();
+            await Promise.all([
+                loadApplications(),
+                loadStatistics(currentAdmin)
+            ]);
+            showMessage(
+                adminAlert,
+                action === "Under Review"
+                    ? `Review started for application ${reference}.`
+                    : `Application ${reference} marked ${action.toLowerCase()}.`,
+                "success"
+            );
+        } catch (error) {
+            console.error("Application review failed:", error);
+            showMessage(
+                reviewModalAlert,
+                error.message || "Unable to update this application."
+            );
         } finally {
             button.disabled = false;
-            button.textContent = "Show documents";
         }
     }
 
@@ -1151,7 +1228,7 @@
                     row,
                     "No applications have been submitted in your review scope."
                 );
-                cell.colSpan = 6;
+                cell.colSpan = 7;
                 cell.className = "text-center text-muted";
                 applicationsBody.appendChild(row);
                 return;
@@ -1161,85 +1238,28 @@
                 const row = document.createElement("tr");
                 addTextCell(
                     row,
-                    `${application.applicantName || "Applicant"}\n${application.applicantEmail || ""}`
+                    application.applicationReference || application.id
                 );
+                addTextCell(row, application.applicantName);
                 addTextCell(row, application.position);
+                addTextCell(row, application.region);
                 addTextCell(row, formatTimestamp(application.submittedAt));
-                addTextCell(row, application.status || "Submitted");
+                addTextCell(row, application.status);
 
-                const documentCell = document.createElement("td");
-                const documentButton = document.createElement("button");
-                documentButton.type = "button";
-                documentButton.className = "btn btn-outline-secondary btn-sm";
-                documentButton.textContent = "Show documents";
-                const documentLinks = document.createElement("div");
-                documentLinks.className = "mt-2";
-                documentButton.addEventListener("click", () => {
-                    showApplicantDocuments(
-                        application,
-                        documentButton,
-                        documentLinks
-                    );
+                const reviewCell = document.createElement("td");
+                const reviewButton = document.createElement("button");
+                reviewButton.type = "button";
+                reviewButton.className = "btn btn-outline-primary btn-sm";
+                reviewButton.textContent = "Review";
+                reviewButton.setAttribute(
+                    "aria-label",
+                    `Review application ${application.applicationReference || application.id}`
+                );
+                reviewButton.addEventListener("click", () => {
+                    openApplicationReview(application);
                 });
-                documentCell.append(documentButton, documentLinks);
-                row.appendChild(documentCell);
-
-                const decisionCell = document.createElement("td");
-                const status = String(application.status || "Submitted")
-                    .trim()
-                    .toLowerCase();
-                if (
-                    ["approved", "denied", "rejected", "shortlisted"]
-                        .includes(status)
-                ) {
-                    decisionCell.textContent =
-                        `Final decision${application.decisionReason
-                            ? `: ${application.decisionReason}`
-                            : ""}`;
-                } else {
-                    const reason = document.createElement("textarea");
-                    reason.className = "form-control form-control-sm mb-2";
-                    reason.rows = 2;
-                    reason.maxLength = 1000;
-                    reason.placeholder = "Decision reason (required)";
-
-                    for (const decision of ["Approved", "Denied"]) {
-                        const button = document.createElement("button");
-                        button.type = "button";
-                        button.className = decision === "Approved"
-                            ? "btn btn-success btn-sm me-1"
-                            : "btn btn-danger btn-sm";
-                        button.textContent = decision;
-                        button.addEventListener("click", async () => {
-                            button.disabled = true;
-                            try {
-                                await reviewApplication(
-                                    application.id,
-                                    decision,
-                                    reason.value,
-                                    currentAdmin
-                                );
-                                await loadApplications();
-                                await loadStatistics(currentAdmin);
-                                showMessage(
-                                    adminAlert,
-                                    `Application ${application.applicationReference || application.id} marked ${decision.toLowerCase()}.`,
-                                    "success"
-                                );
-                            } catch (error) {
-                                console.error("Application review failed:", error);
-                                showMessage(
-                                    adminAlert,
-                                    error.message || "Unable to save the decision."
-                                );
-                                button.disabled = false;
-                            }
-                        });
-                        decisionCell.appendChild(button);
-                    }
-                    decisionCell.prepend(reason);
-                }
-                row.appendChild(decisionCell);
+                reviewCell.appendChild(reviewButton);
+                row.appendChild(reviewCell);
                 applicationsBody.appendChild(row);
             }
         } catch (error) {
@@ -1250,7 +1270,7 @@
             );
             const row = document.createElement("tr");
             const cell = addTextCell(row, "Applications could not be loaded.");
-            cell.colSpan = 6;
+            cell.colSpan = 7;
             applicationsBody.appendChild(row);
         }
     }
@@ -1272,23 +1292,28 @@
 
             for (const event of events) {
                 const row = document.createElement("tr");
-                addTextCell(row, formatTimestamp(event.createdAt));
+                addTextCell(row, formatTimestamp(event.timestamp || event.createdAt));
                 addTextCell(row, event.action);
                 addTextCell(
                     row,
-                    event.actorStaffNumber
-                        ? `${event.actorRole} (${event.actorStaffNumber})`
-                        : `${event.actorRole} (${event.actorUid})`
+                    event.staffNumber
+                        || event.actorStaffNumber
+                        || event.adminId
+                        || event.actorUid
+                        || "Not available"
                 );
                 addTextCell(
                     row,
-                    event.details?.applicationReference
+                    event.applicationReference
+                        || event.details?.applicationReference
+                        || event.applicationId
                         || event.targetApplicantId
                         || event.entityId
                 );
                 addTextCell(
                     row,
-                    event.details?.reason
+                    event.reason
+                        || event.details?.reason
                         || event.details?.position
                         || ""
                 );
@@ -1503,14 +1528,17 @@
                 "totalApplications"
             ).textContent = result.total ?? 0;
             document.getElementById(
-                "pendingApplications"
-            ).textContent = result.pending ?? 0;
+                "submittedApplications"
+            ).textContent = result.submitted ?? 0;
             document.getElementById(
-                "shortlistedApplications"
-            ).textContent = result.shortlisted ?? 0;
+                "underReviewApplications"
+            ).textContent = result.underReview ?? 0;
             document.getElementById(
-                "registeredUsers"
-            ).textContent = result.users ?? 0;
+                "approvedApplications"
+            ).textContent = result.approved ?? 0;
+            document.getElementById(
+                "deniedApplications"
+            ).textContent = result.denied ?? 0;
         } catch (error) {
             console.error(
                 "Statistics error:",
@@ -1519,15 +1547,166 @@
         }
     }
 
+    const vacancyForm = document.getElementById("vacancyForm");
+    const vacancyAlert = document.getElementById("vacancyAlert");
+    const vacancySubmit = vacancyForm.querySelector("button[type=submit]");
+    const vacancyRegion = document.getElementById("jobRegion");
+    const cancelVacancyEdit = document.getElementById("cancelVacancyEdit");
+    let editingVacancyId = null;
+
+    function canManageVacancies() {
+        return currentAdmin && currentAdmin.active === true
+            && ["admin", "recruiter", "super_admin"].includes(currentAdmin.role)
+            && (currentAdmin.role === "super_admin"
+                || (typeof currentAdmin.region === "string" && currentAdmin.region.trim().length > 0));
+    }
+
+    function resetVacancyForm() {
+        vacancyForm.reset();
+        editingVacancyId = null;
+        vacancyRegion.readOnly = currentAdmin?.role !== "super_admin";
+        // Use the exact stored region: rules compare strings, including case and spaces.
+        if (currentAdmin?.role !== "super_admin") vacancyRegion.value = currentAdmin?.region || "";
+        vacancySubmit.textContent = "Publish vacancy";
+        vacancySubmit.disabled = !canManageVacancies();
+        cancelVacancyEdit.classList.add("d-none");
+    }
+
+    function vacancyError(error) {
+        if (error.code === "permission-denied") {
+            return "Vacancy access was denied. Check that the deployed /jobs rules match this project and that admins/{Firebase UID} has active: true, an allowed role, and the exact assigned region. Verify the account email and sign in again.";
+        }
+        return error.message || "Unable to manage vacancies. Please try again.";
+    }
+
+    cancelVacancyEdit.addEventListener("click", resetVacancyForm);
+
+    async function loadVacancies() {
+        const list = document.getElementById("adminJobsList");
+        if (!canManageVacancies()) {
+            list.textContent = "An active administrator account with an assigned region is required to manage vacancies.";
+            vacancySubmit.disabled = true;
+            return;
+        }
+        try {
+            // Ensure Firestore sees current email_verified claims, not a stale ID token.
+            if (!auth.currentUser) throw new Error("Please sign in again to manage vacancies.");
+            const token = await auth.currentUser.getIdTokenResult(true);
+            if (token.claims.email_verified !== true) {
+                throw new Error("Verify your administrator email and sign in again to manage vacancies.");
+            }
+            const jobsQuery = currentAdmin.role === "super_admin"
+                ? collection(db, "jobs")
+                : query(collection(db, "jobs"), where("region", "==", currentAdmin.region));
+            const snapshot = await getDocs(jobsQuery);
+            list.replaceChildren();
+            if (snapshot.empty) { list.textContent = "No vacancies have been created."; return; }
+            for (const item of snapshot.docs) {
+                const job = item.data();
+                const row = document.createElement("div");
+                row.className = "d-flex justify-content-between align-items-center border rounded p-2 mb-2 gap-2";
+                const text = document.createElement("span");
+                text.textContent = `${job.title || "Vacancy"} ? ${job.region || ""} ? ${job.status || "Closed"}${job.published ? " ? Published" : " ? Unpublished"}`;
+                const actions = document.createElement("div");
+                actions.className = "d-flex gap-2 flex-wrap";
+                function action(label, style, operation) {
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.className = `btn btn-sm btn-outline-${style}`;
+                    button.textContent = label;
+                    button.addEventListener("click", async () => {
+                        button.disabled = true;
+                        try { await operation(); }
+                        catch (error) { showMessage(vacancyAlert, vacancyError(error)); }
+                        finally { button.disabled = false; }
+                    });
+                    actions.append(button);
+                }
+                action("Edit", "secondary", async () => {
+                    editingVacancyId = item.id;
+                    document.getElementById("jobTitle").value = job.title || "";
+                    vacancyRegion.value = job.region || "";
+                    vacancyRegion.readOnly = true; // Region is immutable on updates.
+                    document.getElementById("jobDescription").value = job.description || "";
+                    document.getElementById("jobRequirements").value = job.requirements || "";
+                    vacancySubmit.textContent = "Save vacancy";
+                    cancelVacancyEdit.classList.remove("d-none");
+                    vacancyForm.scrollIntoView({ behavior: "smooth" });
+                });
+                action(job.status === "Open" ? "Close" : "Reopen", "primary", async () => {
+                    await updateDoc(doc(db, "jobs", item.id), {
+                        status: job.status === "Open" ? "Closed" : "Open", updatedAt: serverTimestamp()
+                    });
+                    await loadVacancies();
+                });
+                action(job.published ? "Unpublish" : "Publish", "primary", async () => {
+                    await updateDoc(doc(db, "jobs", item.id), {
+                        published: !job.published, updatedAt: serverTimestamp()
+                    });
+                    await loadVacancies();
+                });
+                action("Delete", "danger", async () => {
+                    if (!confirm(`Delete ${job.title || "this vacancy"}?`)) return;
+                    await deleteDoc(doc(db, "jobs", item.id));
+                    if (editingVacancyId === item.id) resetVacancyForm();
+                    await loadVacancies();
+                });
+                row.append(text, actions);
+                list.append(row);
+            }
+        } catch (error) {
+            list.textContent = "Vacancies could not be loaded.";
+            showMessage(vacancyAlert, vacancyError(error));
+            console.error("Vacancy load failed", error);
+        }
+    }
+
+    vacancyForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!canManageVacancies()) {
+            showMessage(vacancyAlert, "An active administrator account with an assigned region is required to manage vacancies.");
+            return;
+        }
+        vacancySubmit.disabled = true;
+        try {
+            // Publishing may happen before the vacancy list finishes loading.
+            // Refresh verification claims here as well so the write uses a current token.
+            if (!auth.currentUser) throw new Error("Please sign in again to manage vacancies.");
+            const token = await auth.currentUser.getIdTokenResult(true);
+            if (token.claims.email_verified !== true) {
+                throw new Error("Verify your administrator email and sign in again to manage vacancies.");
+            }
+            const fields = {
+                title: document.getElementById("jobTitle").value.trim(),
+                description: document.getElementById("jobDescription").value.trim(),
+                requirements: document.getElementById("jobRequirements").value.trim(),
+                updatedAt: serverTimestamp()
+            };
+            if (!fields.title || fields.title.length > 120
+                || fields.description.length > 2000 || fields.requirements.length > 2000) {
+                throw new Error("Enter a title (1?120 characters) and keep description and requirements within 2000 characters each.");
+            }
+            const editing = editingVacancyId !== null;
+            if (editing) {
+                await updateDoc(doc(db, "jobs", editingVacancyId), fields);
+            } else {
+                const region = currentAdmin.role === "super_admin"
+                    ? vacancyRegion.value.trim() : currentAdmin.region;
+                if (!region || region.length > 80) throw new Error("Enter a region of 1?80 characters.");
+                await addDoc(collection(db, "jobs"), {
+                    ...fields, region, status: "Open", published: true, createdAt: serverTimestamp()
+                });
+            }
+            resetVacancyForm();
+            showMessage(vacancyAlert, editing ? "Vacancy updated." : "Vacancy published.", "success");
+            await loadVacancies();
+        } catch (error) { showMessage(vacancyAlert, vacancyError(error)); }
+        finally { vacancySubmit.disabled = !canManageVacancies(); }
+    });
 
 
     // ========================================================
-    // PROTECT THIS PAGE
-    //
-    // THIS REPLACES:
-    //
-    // localStorage.getItem("isAdminLoggedIn")
-    //
+    // PROTECT THIS PAGE WITH FIREBASE AUTH AND ADMINS/{UID}
     // ========================================================
 
     protectAdminPage(
@@ -1546,6 +1725,15 @@
             );
 
             currentAdmin = admin;
+            resetVacancyForm();
+            if (admin.role !== "super_admin") {
+                document.getElementById("jobRegion").value = admin.region || "";
+                if (!admin.region) {
+                    document.getElementById("vacancyAlert").textContent =
+                        "Vacancy management is unavailable because this administrator account has no region.";
+                    document.getElementById("vacancyAlert").className = "alert alert-warning";
+                }
+            }
 
             // -----------------------------------------------
             // Display administrator details
@@ -1576,6 +1764,7 @@
                 admin
             );
             await loadApplications();
+            await loadVacancies();
 
         }
     );
@@ -1645,9 +1834,7 @@
 
             event.preventDefault();
 
-            alert(
-                "Vacancy management will be connected next."
-            );
+            document.getElementById("vacancyManagementSection").scrollIntoView({ behavior: "smooth" });
         }
     );
 
@@ -1717,9 +1904,7 @@
         "click",
         function () {
 
-            alert(
-                "Vacancy management will be connected next."
-            );
+            document.getElementById("vacancyManagementSection").scrollIntoView({ behavior: "smooth" });
         }
     );
 
@@ -1747,9 +1932,24 @@
         }
     );
 
+    startReviewButton.addEventListener("click", () => {
+        completeReviewAction("Under Review", startReviewButton);
+    });
+    approveApplicationButton.addEventListener("click", () => {
+        completeReviewAction("Approved", approveApplicationButton);
+    });
+    denyApplicationButton.addEventListener("click", () => {
+        completeReviewAction("Denied", denyApplicationButton);
+    });
+
     document.getElementById(
         "refreshApplicationsBtn"
-    ).addEventListener("click", loadApplications);
+    ).addEventListener("click", async () => {
+        await Promise.all([
+            loadApplications(),
+            currentAdmin ? loadStatistics(currentAdmin) : Promise.resolve()
+        ]);
+    });
 
     document.getElementById(
         "refreshAuditBtn"

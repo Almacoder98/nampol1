@@ -14,6 +14,12 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
     }
 
+    function adminStaffNumber() {
+      return adminRecord().staffNumber is string
+        ? adminRecord().staffNumber
+        : '';
+    }
+
     function isActiveAdmin() {
       return verifiedUser()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
@@ -24,30 +30,237 @@ service cloud.firestore {
     function canReviewRegion(region) {
       return isActiveAdmin()
         && (adminRecord().role == 'super_admin'
-          || adminRecord().region == region);
+          || (region is string && region.size() > 0
+            && adminRecord().region == region));
     }
 
     function applicantRecord(uid) {
       return get(/databases/$(database)/documents/users/$(uid)).data;
     }
 
-    function applicantRecordAfter(uid) {
-      return getAfter(/databases/$(database)/documents/users/$(uid)).data;
+    function validDocumentMetadata(data, type) {
+      return data is map
+        && data.keys().hasOnly([
+          'documentType',
+          'fileName',
+          'fileSize',
+          'mimeType',
+          'storageMode',
+          'uploaded',
+          'validationStatus',
+          'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'documentType',
+          'fileName',
+          'fileSize',
+          'mimeType',
+          'storageMode',
+          'uploaded',
+          'validationStatus',
+          'updatedAt'
+        ])
+        && data.documentType == type
+        && data.fileName is string
+        && data.fileSize is number
+        && data.fileSize > 0
+        && data.fileSize <= 5242880
+        && data.mimeType is string
+        && (type != 'cv' || data.mimeType == 'application/pdf')
+        && (type == 'cv'
+          || data.mimeType in ['application/pdf', 'image/jpeg', 'image/png'])
+        && data.storageMode == 'prototype-metadata-only'
+        && data.uploaded == false
+        && data.validationStatus == 'validated'
+        && data.updatedAt == request.time;
     }
 
-    function validStoredDocument(data, uid, type) {
-      return data is map
-        && data.storagePath is string
-        && data.storagePath.split('/').size() == 4
-        && data.storagePath.split('/')[0] == 'applicantDocuments'
-        && data.storagePath.split('/')[1] == uid
-        && data.storagePath.split('/')[2] == type
-        && data.uploaded == true
-        && data.validationStatus == 'uploaded';
+    function validReviewStart() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return resource.data.status == 'Submitted'
+        && request.resource.data.status == 'Under Review'
+        && changed.hasOnly([
+          'status',
+          'reviewStartedAt',
+          'reviewedBy',
+          'reviewedByStaffNumber',
+          'updatedAt'
+        ])
+        && changed.hasAll([
+          'status',
+          'reviewStartedAt',
+          'reviewedBy',
+          'reviewedByStaffNumber',
+          'updatedAt'
+        ])
+        && request.resource.data.reviewStartedAt == request.time
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedByStaffNumber == adminStaffNumber()
+        && request.resource.data.reviewedAt == resource.data.reviewedAt
+        && request.resource.data.decisionReason == resource.data.decisionReason
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validFinalDecision() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return resource.data.status == 'Under Review'
+        && request.resource.data.status in ['Approved', 'Denied']
+        && changed.hasOnly([
+          'status',
+          'decisionReason',
+          'reviewedAt',
+          'reviewedBy',
+          'reviewedByStaffNumber',
+          'updatedAt'
+        ])
+        && changed.hasAll([
+          'status',
+          'decisionReason',
+          'reviewedAt',
+          'updatedAt'
+        ])
+        && request.resource.data.reviewStartedAt == resource.data.reviewStartedAt
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedByStaffNumber == adminStaffNumber()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.decisionReason is string
+        && request.resource.data.decisionReason.size() <= 1000
+        && (request.resource.data.status != 'Denied'
+          || request.resource.data.decisionReason.size() > 0);
+    }
+
+    function reviewAction(status) {
+      return status == 'Under Review' ? 'REVIEW_STARTED'
+        : (status == 'Approved' ? 'APPLICATION_APPROVED' : 'APPLICATION_DENIED');
+    }
+
+    // A fresh canonical event must accompany this update in the same commit.
+    // Existing immutable logs cannot be reused to authorize another transition.
+    function hasReviewAudit(applicationId) {
+      let action = reviewAction(request.resource.data.status);
+      let eventId = applicationId + '__' + action;
+      let auditPath = /databases/$(database)/documents/auditLogs/$(eventId);
+      let audit = getAfter(auditPath).data;
+      return !exists(auditPath)
+        && audit.action == action
+        && audit.applicationId == applicationId
+        && audit.applicantId == resource.data.applicantId
+        && audit.region == resource.data.region
+        && audit.adminId == request.auth.uid
+        && audit.staffNumber == adminStaffNumber()
+        && audit.timestamp == request.time
+        && audit.reason == (request.resource.data.status == 'Under Review'
+          ? '' : request.resource.data.decisionReason);
+    }
+
+    function validReviewAudit(eventId) {
+      let applicationPath = /databases/$(database)/documents/applications/$(request.resource.data.applicationId);
+      let application = getAfter(applicationPath).data;
+      let previous = get(applicationPath).data;
+      return isActiveAdmin()
+        && request.resource.data.keys().hasOnly([
+          'action',
+          'adminId',
+          'staffNumber',
+          'applicationId',
+          'applicationReference',
+          'applicantId',
+          'reason',
+          'timestamp',
+          'region'
+        ])
+        && request.resource.data.keys().hasAll([
+          'action',
+          'adminId',
+          'staffNumber',
+          'applicationId',
+          'applicationReference',
+          'applicantId',
+          'reason',
+          'timestamp',
+          'region'
+        ])
+        && request.resource.data.action in [
+          'REVIEW_STARTED',
+          'APPLICATION_APPROVED',
+          'APPLICATION_DENIED'
+        ]
+        && request.resource.data.adminId == request.auth.uid
+        && request.resource.data.staffNumber == adminStaffNumber()
+        && request.resource.data.applicationId is string
+        && request.resource.data.applicantId is string
+        && request.resource.data.applicationReference is string
+        && request.resource.data.region is string
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 1000
+        && request.resource.data.timestamp == request.time
+        && exists(applicationPath)
+        && eventId == request.resource.data.applicationId + '__' + request.resource.data.action
+        && ((previous.status == 'Submitted' && application.status == 'Under Review')
+          || (previous.status == 'Under Review' && application.status in ['Approved', 'Denied']))
+        && application.applicantId == request.resource.data.applicantId
+        && application.region == request.resource.data.region
+        && (application.applicationReference is string
+          ? application.applicationReference
+          : request.resource.data.applicationId)
+            == request.resource.data.applicationReference
+        && application.reviewedBy == request.auth.uid
+        && application.reviewedByStaffNumber == adminStaffNumber()
+        && canReviewRegion(application.region)
+        && (
+          (request.resource.data.action == 'REVIEW_STARTED'
+            && application.status == 'Under Review'
+            && application.reviewStartedAt == request.time
+            && request.resource.data.reason == '')
+          || (request.resource.data.action == 'APPLICATION_APPROVED'
+            && application.status == 'Approved'
+            && application.reviewedAt == request.time
+            && application.decisionReason == request.resource.data.reason)
+          || (request.resource.data.action == 'APPLICATION_DENIED'
+            && application.status == 'Denied'
+            && application.reviewedAt == request.time
+            && application.decisionReason == request.resource.data.reason
+            && request.resource.data.reason.size() > 0)
+        );
+    }
+
+    function validDocumentAccessAudit() {
+      let event = request.resource.data;
+      let profilePath = /databases/$(database)/documents/users/$(event.targetApplicantId);
+      let documentsPath = /databases/$(database)/documents/applicantDocuments/$(event.targetApplicantId);
+      let profile = get(profilePath).data;
+      return isActiveAdmin()
+        && event.keys().hasOnly([
+          'actorUid', 'actorRole', 'action', 'entityType', 'entityId',
+          'targetApplicantId', 'region', 'createdAt'
+        ])
+        && event.keys().hasAll([
+          'actorUid', 'actorRole', 'action', 'entityType', 'entityId',
+          'targetApplicantId', 'region', 'createdAt'
+        ])
+        && event.actorUid == request.auth.uid
+        && event.actorRole == adminRecord().role
+        && event.action == 'admin.documents_accessed'
+        && event.entityType == 'applicantDocuments'
+        && event.targetApplicantId is string
+        && event.entityId == event.targetApplicantId
+        && exists(profilePath)
+        && exists(documentsPath)
+        && profile.role == 'applicant'
+        && event.region is string
+        && event.region == profile.region
+        && canReviewRegion(profile.region)
+        && event.createdAt == request.time;
     }
 
     match /users/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid || isActiveAdmin());
+      allow read: if signedIn() && (request.auth.uid == uid
+        || (isActiveAdmin()
+          && (adminRecord().role == 'super_admin'
+            || (resource.data.role == 'applicant'
+              && resource.data.region is string && resource.data.region.size() > 0
+              && adminRecord().region == resource.data.region))));
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.uid == uid
@@ -87,6 +300,57 @@ service cloud.firestore {
       allow write: if false;
     }
 
+match /jobs/{jobId} {
+      // Queries must prove either public visibility or administrator scope.
+      // Keep the super-admin branch independent of document fields.
+      allow read: if (isActiveAdmin()
+          && (adminRecord().role == 'super_admin'
+            || adminRecord().region == resource.data.region))
+        || (resource.data.published == true && resource.data.status == 'Open');
+      allow create: if isActiveAdmin()
+        && request.resource.data.keys().hasOnly([
+          'title', 'region', 'description', 'requirements', 'status',
+          'published', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'title', 'region', 'description', 'requirements', 'status',
+          'published', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.region is string
+        && request.resource.data.region.size() > 0
+        && request.resource.data.region.size() <= 80
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 2000
+        && request.resource.data.requirements is string
+        && request.resource.data.requirements.size() <= 2000
+        && request.resource.data.status in ['Open', 'Closed']
+        && request.resource.data.published is bool
+        && (adminRecord().role == 'super_admin'
+          || request.resource.data.region == adminRecord().region)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if canReviewRegion(resource.data.region)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'description', 'requirements', 'status',
+          'published', 'updatedAt'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.region == resource.data.region
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 2000
+        && request.resource.data.requirements is string
+        && request.resource.data.requirements.size() <= 2000
+        && request.resource.data.status in ['Open', 'Closed']
+        && request.resource.data.published is bool
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if canReviewRegion(resource.data.region);
+    }
+
     match /applicantDocuments/{uid} {
       allow read: if verifiedUser()
         && (request.auth.uid == uid || canReviewRegion(
@@ -96,23 +360,30 @@ service cloud.firestore {
         && request.auth.uid == uid
         && request.resource.data.applicantId == uid
         && request.resource.data.documentsValidated == true
+        && request.resource.data.prototypeMode == true
+        && request.resource.data.updatedAt == request.time
         && request.resource.data.keys().hasOnly([
           'applicantId',
           'cv',
           'identification',
           'certificate',
           'documentsValidated',
+          'prototypeMode',
           'updatedAt'
         ])
-        && validStoredDocument(request.resource.data.cv, uid, 'cv')
-        && validStoredDocument(
-          request.resource.data.identification,
-          uid,
-          'identification'
-        )
-        && validStoredDocument(
+        && request.resource.data.keys().hasAll([
+          'applicantId',
+          'cv',
+          'identification',
+          'certificate',
+          'documentsValidated',
+          'prototypeMode',
+          'updatedAt'
+        ])
+        && validDocumentMetadata(request.resource.data.cv, 'cv')
+        && validDocumentMetadata(request.resource.data.identification, 'identification')
+        && validDocumentMetadata(
           request.resource.data.certificate,
-          uid,
           'qualification_certificate'
         );
       allow delete: if false;
@@ -133,63 +404,20 @@ service cloud.firestore {
           /databases/$(database)/documents/applicantDocuments/$(request.auth.uid)
         ).data.documentsValidated == true
         && request.resource.data.status == 'Submitted'
+        && request.resource.data.reviewStartedAt == null
+        && request.resource.data.reviewedAt == null
         && request.resource.data.reviewedBy == null
+        && request.resource.data.reviewedByStaffNumber == null
         && request.resource.data.decisionReason == null;
       allow update: if canReviewRegion(resource.data.region)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'status',
-          'decisionReason',
-          'reviewedAt',
-          'reviewedBy',
-          'reviewedByStaffNumber',
-          'updatedAt'
-        ])
-        && resource.data.status != 'Approved'
-        && resource.data.status != 'Denied'
-        && resource.data.status != 'shortlisted'
-        && request.resource.data.status in ['Approved', 'Denied']
-        && request.resource.data.reviewedBy == request.auth.uid
-        && request.resource.data.reviewedAt != null
-        && resource.data.status != 'approved'
-        && resource.data.status != 'denied'
-        && resource.data.status != 'rejected'
-        && request.resource.data.decisionReason is string
-        && request.resource.data.decisionReason.size() > 0
-        && request.resource.data.decisionReason.size() <= 1000;
+        && (validReviewStart() || validFinalDecision())
+        && hasReviewAudit(applicationId);
       allow delete: if false;
     }
 
     match /auditLogs/{eventId} {
       allow read: if canReviewRegion(resource.data.region);
-      allow create: if signedIn()
-        && request.resource.data.actorUid == request.auth.uid
-        && request.resource.data.region is string
-        && request.resource.data.action is string
-        && request.resource.data.entityType is string
-        && request.resource.data.entityId is string
-        && request.resource.data.createdAt == request.time
-        && (
-          (request.resource.data.actorRole == 'applicant'
-            && applicantRecordAfter(request.auth.uid).role == 'applicant'
-            && request.resource.data.targetApplicantId == request.auth.uid
-            && (
-              request.resource.data.action == 'applicant.registered'
-              || (verifiedUser()
-                && request.resource.data.action in [
-                  'applicant.profile_completed',
-                  'applicant.email_verified',
-                  'applicant.documents_uploaded',
-                  'application.submitted'
-                ])
-            ))
-          || (isActiveAdmin()
-            && request.resource.data.actorRole == adminRecord().role
-            && request.resource.data.action in [
-              'application.approved',
-              'application.denied',
-              'admin.documents_accessed'
-            ])
-        );
+      allow create: if validReviewAudit(eventId) || validDocumentAccessAudit();
       allow update, delete: if false;
     }
   }

@@ -123,15 +123,12 @@
             ></div>
 
 
-            <div class="alert alert-warning prototype-notice">
+            <div class="alert alert-info prototype-notice">
 
-                <strong>Firebase Storage upload:</strong>
-
-                Your selected files will be uploaded to Firebase Storage.
-                Access is restricted by the project's Storage security rules.
-
-                Deploy the included rules before accepting real applicant
-                documents. Use sample files while testing.
+                All three PDFs are uploaded to the secure document service for
+                file validation, ClamAV malware scanning and private storage.
+                Upload is confirmed only after the server completes these steps.
+                Scanning does not verify document authenticity. Use sample/test files.
 
             </div>
 
@@ -144,13 +141,16 @@
 
                 <p class="text-muted mb-0">
                     Select the required documents below.
-                    PDF files are recommended.
+                    All three files must be PDFs, each no larger than 5 MiB.
                 </p>
 
             </div>
 
 
-            <form id="documentForm">
+            <div id="uploadStatus" class="alert alert-info d-none" role="status" aria-live="polite">
+                Uploading, validating, scanning and storing your PDFs. Please keep this page open.
+            </div>
+            <form id="documentForm" aria-busy="false">
 
                 <!-- CV -->
 
@@ -180,7 +180,7 @@
                     >
 
                     <div class="form-text">
-                        PDF only. Maximum size: 5 MB.
+                        PDF only. Maximum size: 5 MiB.
                     </div>
 
                     <div
@@ -214,12 +214,12 @@
                         type="file"
                         id="idFile"
                         class="form-control"
-                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                        accept=".pdf,application/pdf"
                         required
                     >
 
                     <div class="form-text">
-                        PDF, JPG or PNG. Maximum size: 5 MB.
+                        PDF only. Maximum size: 5 MiB.
                     </div>
 
                     <div
@@ -253,12 +253,12 @@
                         type="file"
                         id="certificateFile"
                         class="form-control"
-                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                        accept=".pdf,application/pdf"
                         required
                     >
 
                     <div class="form-text">
-                        PDF, JPG or PNG. Maximum size: 5 MB.
+                        PDF only. Maximum size: 5 MiB.
                     </div>
 
                     <div
@@ -282,7 +282,7 @@
                         type="submit"
                         class="btn btn-primary btn-lg"
                     >
-                        Upload and Save Documents
+                        Upload Documents Securely
                     </button>
 
                 </div>

@@ -1,6 +1,17 @@
 ﻿# Secrets
 .env
+.env.*
+*.env
 serviceAccountKey.json
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+application_default_credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+/secrets/
+/credentials/
 
 # Python
 __pycache__/
@@ -8,6 +19,13 @@ __pycache__/
 *.pyo
 venv/
 env/
+.venv/
+.venv-*/
+node_modules/
+.pytest_cache/
+.coverage
+htmlcov/
+.frontend-server-test-*/
 
 # Logs
 *.log
@@ -18,3 +36,12 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated frontend snapshot
+/public/
+
+# Dedicated backend Python environment
+/.venv-backend/
+
+# Temporary local authentication diagnostic; preserve locally only.
+/Frontend/document-access-test.html

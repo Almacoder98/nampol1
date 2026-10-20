@@ -408,6 +408,11 @@
             </div>
 
 
+            <section class="dashboard-card mb-4" aria-labelledby="openJobsHeading">
+                <h4 id="openJobsHeading" class="mb-3">Open vacancies</h4>
+                <div id="dashboardJobs" class="row g-3"><p>Loading current vacancies…</p></div>
+            </section>
+
             <!-- APPLICATIONS -->
 
             <div class="dashboard-card">
@@ -542,6 +547,23 @@ import {
     query,
     where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getOpenJobs } from "../js/jobs.js";
+
+async function renderOpenJobs() {
+    const container = document.getElementById("dashboardJobs");
+    try {
+        const jobs = await getOpenJobs(); container.replaceChildren();
+        if (!jobs.length) { container.textContent = "There are no open vacancies at the moment."; return; }
+        for (const job of jobs) {
+            const card = document.createElement("div"); card.className = "col-md-6";
+            const box = document.createElement("div"); box.className = "p-3 rounded border h-100";
+            const title = document.createElement("h5"); title.textContent = job.title || "Vacancy";
+            const info = document.createElement("p"); info.textContent = [job.region, job.description].filter(Boolean).join(" · ");
+            const link = document.createElement("a"); link.className = "btn btn-primary btn-sm"; link.href = `apply.html?position=${encodeURIComponent(job.title || "")}`; link.textContent = "Apply";
+            box.append(title, info, link); card.append(box); container.append(card);
+        }
+    } catch (error) { container.textContent = "Vacancies could not be loaded."; console.error(error); }
+}
 
 
 
@@ -1048,6 +1070,7 @@ function renderNotifications(
 
 
 async function loadDashboard(user) {
+    await renderOpenJobs();
 
     try {
 
