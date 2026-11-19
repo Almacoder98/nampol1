@@ -440,10 +440,7 @@ export async function loginUser(
 
     } catch (error) {
 
-        console.error(
-            "Applicant login error:",
-            error
-        );
+        console.error("Applicant authentication failed.");
 
 
         let message =
@@ -506,7 +503,7 @@ export async function loginUser(
             success: false,
 
             error:
-                message
+                error.securityMessage || message
         };
     }
 }
@@ -658,9 +655,9 @@ export function checkAuthState(
 
     onAuthStateChanged(
         auth,
-        function (user) {
-
-            callback(user);
+        async function (user) {
+            try { callback(user && user.emailVerified && auth.currentUser === user ? user : null); }
+            catch { callback(null); }
         }
     );
 }

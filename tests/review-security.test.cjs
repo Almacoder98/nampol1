@@ -33,7 +33,7 @@ test('start and final decisions write canonical matching logs in the same transa
         ['Under Review', 'reviewApplication("app1", "Denied", " Ineligible ", admin)', 'APPLICATION_DENIED', 'Ineligible']
     ]) {
         const s = setup(status); await s.run(command);
-        assert.equal(s.commits.length, 1); assert.equal(s.commits[0].length, 2);
+        assert.equal(s.commits.length, 1); assert.equal(s.commits[0].length, status === "Submitted" ? 2 : 4);
         const [application, audit] = s.commits[0];
         assert.equal(application.ref.collection, 'applications');
         assert.equal(audit.ref.collection, 'auditLogs');
@@ -63,3 +63,21 @@ test('super admin reviews across regions', async () => {
     assert.equal(s.commits[0][1].data.region, 'Erongo');
 });
 test('admin module parses', () => assert.doesNotThrow(() => new vm.SourceTextModule(source)));
+
+test('final decisions atomically enqueue a private UID-only notification and queue audit', async () => {
+    const s = setup('Under Review'); await s.run('reviewApplication("app1", "Denied", "Reason", admin)');
+    const writes = s.commits[0]; assert.equal(writes.length, 4);
+    assert.equal(writes[2].ref.collection, 'notificationOutbox'); assert.equal(writes[2].ref.id, 'app1__Denied');
+    assert.equal(writes[2].data.state, 'pending'); assert.equal(writes[2].data.applicantId, 'alice');
+    assert.equal(writes[2].data.createdAt, writes[0].data.reviewedAt);
+    assert.equal(writes[2].data.to, undefined); assert.equal(writes[2].data.reason, undefined);
+    assert.equal(writes[3].data.action, 'NOTIFICATION_QUEUED');
+});
+
+test('same review/decision retry never rewrites timestamps or duplicates notifications', async () => {
+    const start = setup('Under Review'); await start.run('startApplicationReview("app1", admin)');
+    assert.equal(start.commits[0].length, 0);
+    const final = setup('Approved', { reviewedBy: admin.uid, decisionReason: 'Eligible' });
+    await final.run('reviewApplication("app1", "Approved", "Eligible", admin)'); assert.equal(final.commits[0].length, 0);
+    await assert.rejects(final.run('reviewApplication("app1", "Denied", "Change", admin)'));
+});

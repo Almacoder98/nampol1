@@ -15,16 +15,24 @@ service cloud.firestore {
     }
 
     function adminStaffNumber() {
-      return adminRecord().staffNumber is string
-        ? adminRecord().staffNumber
+      let admin = adminRecord();
+      return admin.staffNumber is string
+        ? admin.staffNumber
         : '';
+    }
+
+    function validAdminGrant() {
+      let admin = adminRecord();
+      return admin.active == true
+        && admin.role in ['admin', 'recruiter', 'super_admin']
+        && (admin.role == 'super_admin'
+          || (admin.region is string && admin.region.size() > 0));
     }
 
     function isActiveAdmin() {
       return verifiedUser()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        && adminRecord().active == true
-        && adminRecord().role in ['admin', 'recruiter', 'super_admin'];
+        && validAdminGrant();
     }
 
     function canReviewRegion(region) {
@@ -36,6 +44,118 @@ service cloud.firestore {
 
     function applicantRecord(uid) {
       return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function readyPdf(file) {
+      return file is map
+        && file.fileName is string
+        && file.fileSize is number && file.fileSize > 0 && file.fileSize <= 5242880
+        && file.mimeType == 'application/pdf'
+        && file.scanStatus == 'clean';
+    }
+
+    function hasRequiredApplicationDocuments() {
+      let setId = request.resource.data.documentSetId;
+      // These manifests are written only by FastAPI using the Admin SDK.
+      // Browser clients have no read/write permission on this collection.
+      let manifest = get(/databases/$(database)/documents/serverDocumentSets/$(setId)).data;
+      return setId is string && setId.matches('^[a-f0-9]{32}$')
+        && manifest.setId == setId
+        && manifest.ownerUid == request.auth.uid
+        && manifest.schemaVersion == 1 && manifest.state == 'ready'
+        && manifest.documents.keys().hasAll(['cv', 'certificate', 'identification'])
+        && readyPdf(manifest.documents.cv)
+        && readyPdf(manifest.documents.certificate)
+        && readyPdf(manifest.documents.identification);
+    }
+
+    function validLinkedVacancy(vacancyId) {
+      let vacancy = get(/databases/$(database)/documents/jobs/$(vacancyId)).data;
+      return vacancy.published == true && vacancy.status == 'Open'
+        && vacancy.title == request.resource.data.position
+        && vacancy.region == request.resource.data.region;
+    }
+
+    function applicationBinding(applicationId, data) {
+      let binding = getAfter(/databases/$(database)/documents/serverApplicationDocumentBindings/$(applicationId)).data;
+      return binding.applicationId == applicationId && binding.ownerUid == data.applicantId
+        && binding.setId == data.documentSetId;
+    }
+
+    function validAiScreeningConsent(data) {
+      let optedIn = data.get('aiScreeningConsent', false);
+      let consentAt = data.get('aiScreeningConsentAt', null);
+      let version = data.get('aiScreeningConsentVersion', null);
+      return optedIn is bool
+        && (optedIn
+          ? consentAt == request.time && version == 'openai-cv-review-v1'
+          : consentAt == null && version == null);
+    }
+
+    function validNewBinding(applicationId) {
+      let data = request.resource.data;
+      let path = /databases/$(database)/documents/applications/$(applicationId);
+      let application = getAfter(path).data;
+      let audit = getAfter(/databases/$(database)/documents/auditLogs/$(applicationId + '__DOCUMENT_SET_BOUND')).data;
+      return verifiedUser() && !exists(path)
+        && data.keys().hasOnly(['applicationId', 'ownerUid', 'setId', 'boundAt'])
+        && data.applicationId == applicationId && data.ownerUid == request.auth.uid
+        && data.boundAt == request.time && application.applicantId == request.auth.uid
+        && application.documentSetId == data.setId && application.status == 'Submitted'
+        && audit.action == 'DOCUMENT_SET_BOUND' && audit.actorUid == request.auth.uid
+        && audit.setId == data.setId && audit.timestamp == request.time;
+    }
+
+    function validBindingAudit(eventId) {
+      let data = request.resource.data;
+      let path = /databases/$(database)/documents/applications/$(data.applicationId);
+      let application = getAfter(path).data;
+      return verifiedUser() && !exists(path)
+        && data.keys().hasOnly(['action', 'actorUid', 'actorRole', 'applicationId', 'setId', 'region', 'timestamp'])
+        && eventId == data.applicationId + '__DOCUMENT_SET_BOUND'
+        && data.actorUid == request.auth.uid && data.actorRole == 'applicant'
+        && application.applicantId == request.auth.uid && data.region == application.region
+        && data.setId == application.documentSetId && data.timestamp == request.time
+        && applicationBinding(data.applicationId, application);
+    }
+
+    function decisionNotification(applicationId) {
+      let id = applicationId + '__' + request.resource.data.status;
+      let path = /databases/$(database)/documents/notificationOutbox/$(id);
+      let item = getAfter(path).data;
+      return !exists(path) && item.applicationId == applicationId
+        && item.applicantId == resource.data.applicantId && item.region == resource.data.region
+        && item.status == request.resource.data.status && item.state == 'pending'
+        && item.createdAt == request.time;
+    }
+
+    function validNotification(notificationId) {
+      let data = request.resource.data;
+      let path = /databases/$(database)/documents/applications/$(data.applicationId);
+      let before = get(path).data;
+      let after = getAfter(path).data;
+      let audit = getAfter(/databases/$(database)/documents/auditLogs/$(notificationId + '__queued')).data;
+      return verifiedUser()
+        && data.keys().hasOnly(['applicationId', 'applicantId', 'applicationReference', 'region', 'status', 'state', 'createdAt'])
+        && notificationId == data.applicationId + '__' + data.status
+        && before.status == 'Under Review' && after.status in ['Approved', 'Denied']
+        && after.status == data.status && after.reviewedBy == request.auth.uid
+        && data.applicantId == after.applicantId && data.region == after.region
+        && data.applicationReference == after.applicationReference
+        && data.state == 'pending' && data.createdAt == request.time
+        && audit.action == 'NOTIFICATION_QUEUED' && audit.actorUid == request.auth.uid
+        && audit.notificationId == notificationId && audit.timestamp == request.time;
+    }
+
+    function validNotificationAudit(eventId) {
+      let data = request.resource.data;
+      let path = /databases/$(database)/documents/notificationOutbox/$(data.notificationId);
+      let item = getAfter(path).data;
+      return verifiedUser() && !exists(path)
+        && data.keys().hasOnly(['action', 'actorUid', 'applicationId', 'notificationId', 'region', 'timestamp'])
+        && eventId == data.notificationId + '__queued' && data.timestamp == request.time
+        && data.actorUid == request.auth.uid && data.applicationId == item.applicationId
+        && data.region == item.region && item.state == 'pending';
     }
 
     function validDocumentMetadata(data, type) {
@@ -127,7 +247,7 @@ service cloud.firestore {
         && request.resource.data.decisionReason is string
         && request.resource.data.decisionReason.size() <= 1000
         && (request.resource.data.status != 'Denied'
-          || request.resource.data.decisionReason.size() > 0);
+          || request.resource.data.decisionReason.matches('[\\s\\S]*[^\\s\\p{Z}\\p{C}][\\s\\S]*'));
     }
 
     function reviewAction(status) {
@@ -255,7 +375,7 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid
+      allow read: if verifiedUser() && (request.auth.uid == uid
         || (isActiveAdmin()
           && (adminRecord().role == 'super_admin'
             || (resource.data.role == 'applicant'
@@ -263,11 +383,19 @@ service cloud.firestore {
               && adminRecord().region == resource.data.region))));
       allow create: if signedIn()
         && request.auth.uid == uid
+        && !exists(/databases/$(database)/documents/admins/$(uid))
+        && !exists(/databases/$(database)/documents/adminProvisioning/$(uid))
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'firstName', 'lastName', 'idNumber', 'dateOfBirth',
+          'gender', 'phone', 'address', 'region', 'role', 'accountStatus',
+          'profileCompleted', 'documentsUploaded', 'emailVerificationPending',
+          'createdAt', 'updatedAt'
+        ])
         && request.resource.data.uid == uid
         && request.resource.data.role == 'applicant'
         && request.resource.data.accountStatus == 'active'
         && request.resource.data.profileCompleted == false;
-      allow update: if signedIn()
+      allow update: if verifiedUser()
         && request.auth.uid == uid
         && resource.data.role == 'applicant'
         && request.resource.data.role == resource.data.role
@@ -276,11 +404,15 @@ service cloud.firestore {
           || request.resource.data.profileCompleted == true)
         && (resource.data.profileCompleted != true
           || request.resource.data.region == resource.data.region)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['academicPoints'])
+          || request.resource.data.academicPoints == null
+          || (request.resource.data.academicPoints is int && request.resource.data.academicPoints >= 0))
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'phone',
           'address',
           'region',
           'highestQualification',
+          'academicPoints',
           'employmentStatus',
           'skills',
           'profileCompleted',
@@ -296,8 +428,33 @@ service cloud.firestore {
     }
 
     match /admins/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
+      allow read: if verifiedUser() && request.auth.uid == uid;
       allow write: if false;
+    }
+
+    // IT-controlled reservations and code digests are never browser-readable.
+    match /adminProvisioning/{uid} { allow read, write: if false; }
+    match /adminStaffCodes/{codeId} { allow read, write: if false; }
+    // Screening and synthetic fixtures are server-owned. All result reads go
+    // through the audited, regional administrator API.
+    match /serverScreeningResults/{applicationId} { allow read, write: if false; }
+    match /serverScreeningRuns/{runId} { allow read, write: if false; }
+    match /syntheticVerificationCases/{applicationId} { allow read, write: if false; }
+    // Internal selection, comments and retry receipts are backend-only.
+    match /serverShortlists/{applicationId} { allow read, write: if false; }
+    match /serverShortlistRequests/{requestId} { allow read, write: if false; }
+    // Only the safe status mirror is visible to its verified applicant.
+    match /applicantShortlistStatuses/{applicationId} {
+      allow read: if verifiedUser() && resource.data.ownerUid == request.auth.uid;
+      allow write: if false;
+    }
+    match /serverApplicationDocumentBindings/{applicationId} {
+      allow create: if validNewBinding(applicationId);
+      allow read, update, delete: if false;
+    }
+    match /notificationOutbox/{notificationId} {
+      allow create: if validNotification(notificationId);
+      allow read, update, delete: if false;
     }
 
 match /jobs/{jobId} {
@@ -390,34 +547,57 @@ match /jobs/{jobId} {
     }
 
     match /applications/{applicationId} {
+      // Safe idempotent submission preflight: no document content exists to expose.
+      allow get: if verifiedUser()
+        && !exists(/databases/$(database)/documents/applications/$(applicationId));
       allow read: if verifiedUser()
         && (resource.data.applicantId == request.auth.uid
           || canReviewRegion(resource.data.region));
       allow create: if verifiedUser()
+        && applicationId.matches('^[A-Za-z0-9_-]{1,128}$')
         && request.resource.data.applicantId == request.auth.uid
         && applicantRecord(request.auth.uid).role == 'applicant'
         && applicantRecord(request.auth.uid).accountStatus == 'active'
         && applicantRecord(request.auth.uid).profileCompleted == true
         && request.resource.data.region == applicantRecord(request.auth.uid).region
         && request.resource.data.documentsValidated == true
-        && get(
-          /databases/$(database)/documents/applicantDocuments/$(request.auth.uid)
-        ).data.documentsValidated == true
+        && hasRequiredApplicationDocuments()
+        && applicationBinding(applicationId, request.resource.data)
+        && validAiScreeningConsent(request.resource.data)
+        && request.resource.data.submittedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.applicationReference.matches('^NAMPOL-[0-9]{4}-[A-Z0-9]{6,32}$')
+        && (request.resource.data.get('vacancyId', null) == null
+          || (request.resource.data.vacancyId is string
+            && request.resource.data.vacancyId.matches('^[A-Za-z0-9_-]{1,128}$')
+            && validLinkedVacancy(request.resource.data.vacancyId)))
         && request.resource.data.status == 'Submitted'
+        && request.resource.data.get('aiScreeningStatus', 'Not Screened') == 'Not Screened'
+        && request.resource.data.get('aiMatchScore', null) == null
+        && request.resource.data.get('verificationStatus', 'Pending') == 'Pending'
+        && !request.resource.data.keys().hasAny(['screeningResult', 'criminalVerification', 'screeningRunId'])
         && request.resource.data.reviewStartedAt == null
         && request.resource.data.reviewedAt == null
         && request.resource.data.reviewedBy == null
         && request.resource.data.reviewedByStaffNumber == null
         && request.resource.data.decisionReason == null;
       allow update: if canReviewRegion(resource.data.region)
+        && applicationBinding(applicationId, resource.data)
         && (validReviewStart() || validFinalDecision())
-        && hasReviewAudit(applicationId);
+        && hasReviewAudit(applicationId)
+        && (request.resource.data.status == 'Under Review' || decisionNotification(applicationId));
       allow delete: if false;
     }
 
     match /auditLogs/{eventId} {
       allow read: if canReviewRegion(resource.data.region);
-      allow create: if validReviewAudit(eventId) || validDocumentAccessAudit();
+      // Each event has one validator; do not evaluate unrelated audit schemas.
+      allow create: if request.resource.data.get('action', '') == 'DOCUMENT_SET_BOUND'
+        ? validBindingAudit(eventId)
+        : request.resource.data.get('action', '') == 'NOTIFICATION_QUEUED'
+          ? validNotificationAudit(eventId)
+          : request.resource.data.get('action', '') == 'admin.documents_accessed'
+            ? validDocumentAccessAudit() : validReviewAudit(eventId);
       allow update, delete: if false;
     }
   }

@@ -1,0 +1,33 @@
+{
+  "label": "SYNTHETIC ACADEMIC DEMONSTRATION ONLY",
+  "state": "LOCAL_FIXTURE_ONLY_NOT_CREATED_IN_FIREBASE",
+  "sms": "PENDING_EXTERNAL_CONFIGURATION",
+  "smtp": "PENDING_EXTERNAL_CONFIGURATION_PREVIEW_ONLY",
+  "accounts": [
+    {"uid": "demo-applicant-alpha", "email": "phase2-test-alpha@example.invalid", "role": "applicant", "region": "Khomas", "firstName": "Demo Applicant", "lastName": "Alpha", "identitySpecimen": "DEMO-ALPHA001", "highestQualification": "Diploma", "scenario": "clear"},
+    {"uid": "demo-applicant-beta", "email": "phase2-test-beta@example.invalid", "role": "applicant", "region": "Khomas", "firstName": "Demo Applicant", "lastName": "Beta", "identitySpecimen": "DEMO-BETA0001", "highestQualification": "Certificate", "scenario": "flagged"},
+    {"uid": "demo-admin-khomas", "email": "demo-admin-khomas@example.invalid", "role": "admin", "region": "Khomas", "staffNumber": "DEMO-KHOMAS-001"},
+    {"uid": "demo-admin-erongo", "email": "demo-admin-erongo@example.invalid", "role": "admin", "region": "Erongo", "staffNumber": "DEMO-ERONGO-001"},
+    {"uid": "demo-super-admin", "email": "demo-super-admin@example.invalid", "role": "super_admin", "region": "", "staffNumber": "DEMO-SUPER-001"}
+  ],
+  "vacancy": {
+    "id": "demo-community-support-2026",
+    "title": "Academic Demo Community Support Officer",
+    "region": "Khomas",
+    "published": true,
+    "status": "Open",
+    "requirements": "CV: computer literacy\nCV: first aid\nQualification: Diploma\nField: policing\nExperience: two years"
+  },
+  "expected": {
+    "alpha": {"met": 4, "not_met": 0, "could_not_verify": 1},
+    "beta": {"met": 0, "not_met": 0, "could_not_verify": 5}
+  },
+  "operatorNotes": [
+    "These are offline identities, not login credentials. No passwords or activation codes are distributed.",
+    "Do not provision example.invalid addresses live: replace with dedicated owner-controlled test inboxes. Preserve phase2-test- email prefix for the existing synthetic-case CLI.",
+    "Assign actual Firebase UIDs after approved creation; never assume these fixture UIDs identify live users.",
+    "Use dedicated owner-controlled test inboxes after project configuration is approved. Do not send live messages.",
+    "Provision administrator identities through the existing IT CLI; never register administrators through the applicant form or create applicant profiles for them.",
+    "Keep generated administrator activation codes private. Disable dedicated accounts through trusted IT tooling after the demonstration; retain non-sensitive evidence."
+  ]
+}

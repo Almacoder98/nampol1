@@ -144,6 +144,8 @@ class DocumentRepository:
                 raise HTTPException(403, "Access denied.")
             if not manifest or manifest.get("ownerUid") != actor.uid or manifest.get("state") != "ready":
                 raise HTTPException(409, "A ready, owned document set is required.")
+            if application.get("documentSetId") != set_id:
+                raise HTTPException(409, "Only the document set recorded at submission can be bound.")
             if binding_snapshot.exists:
                 binding = binding_snapshot.to_dict()
                 if binding.get("setId") != set_id or binding.get("ownerUid") != actor.uid:
@@ -168,6 +170,46 @@ class DocumentRepository:
         if binding.get("ownerUid") != owner:
             raise HTTPException(403, "Access denied.")
         return self.owned(owner, binding["setId"])
+
+    def ensure_binding(self, actor, application_id):
+        """Repair only a recorded immutable source; never choose the latest upload."""
+        @firestore.transactional
+        def commit(transaction):
+            app = self.client.collection('applications').document(application_id).get(transaction=transaction).to_dict()
+            if not app:
+                raise HTTPException(404, 'Resource not found.')
+            class Records:
+                def read(inner, collection, uid):
+                    return self.client.collection(collection).document(uid).get(transaction=transaction).to_dict()
+            from backend.admin_security import active_admin
+            if actor.uid == app.get('applicantId'):
+                profile = Records().read('users', actor.uid)
+                if not profile or profile.get('role') != 'applicant' or profile.get('accountStatus') != 'active' or profile.get('profileCompleted') is not True:
+                    raise HTTPException(403, 'Access denied.')
+                role = 'applicant'
+            else:
+                admin = active_admin(Records(), actor.uid)
+                if admin['role'] != 'super_admin' and admin.get('region') != app.get('region'):
+                    raise HTTPException(403, 'Access denied.')
+                role = admin['role']
+            set_id = set_identifier(app.get('documentSetId'))
+            manifest = self.client.collection(self.SETS).document(set_id).get(transaction=transaction).to_dict()
+            if (not manifest or manifest.get('ownerUid') != app['applicantId'] or manifest.get('state') != 'ready'
+                    or any(manifest.get('documents', {}).get(kind, {}).get('scanStatus') != 'clean'
+                        or manifest.get('documents', {}).get(kind, {}).get('mimeType') != 'application/pdf' for kind in DOCUMENT_TYPES)):
+                raise HTTPException(409, 'The submitted ready PDF set is unavailable. Contact support; it cannot be replaced.')
+            reference = self.client.collection(self.BINDINGS).document(application_id)
+            binding = reference.get(transaction=transaction).to_dict()
+            if binding:
+                if binding.get('setId') != set_id or binding.get('ownerUid') != app['applicantId'] or binding.get('applicationId') != application_id:
+                    raise HTTPException(409, 'Application document binding mismatch.')
+                return manifest
+            transaction.create(reference, {'applicationId': application_id, 'ownerUid': app['applicantId'], 'setId': set_id, 'boundAt': now()})
+            transaction.create(self.client.collection('auditLogs').document(uuid4().hex),
+                self.event(actor, 'DOCUMENT_BINDING_REPAIRED', app.get('region', ''),
+                           actorRole=role, applicationId=application_id, setId=set_id, outcome='success'))
+            return manifest
+        return commit(self.client.transaction())
 
 
 class DocumentService:
@@ -215,6 +257,8 @@ class DocumentService:
             application = self.authorization.application_documents(actor, application_id)
             if application["applicantId"] != record["ownerUid"]:
                 raise HTTPException(403, "Access denied.")
+            if application.get('documentSetId') != record.get('setId'):
+                raise HTTPException(409, 'Document set does not match the submitted application.')
             region = application.get("region", "")
             role = "applicant" if actor.uid == record["ownerUid"] else self.authorization.administrator(actor, region)["role"]
         else:

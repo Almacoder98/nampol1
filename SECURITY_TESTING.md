@@ -1,5 +1,38 @@
 # Regional authorization and atomic review auditing
 
+## Latest emulator verification — 22 October 2026
+
+The current `firestore.rules` compiled and passed the real Firestore REST integration suite in the isolated `demo-nampol-security` project: **12 tests passed, 0 failed, 0 skipped** (11 scenario groups plus the parent test). The emulator stopped successfully after the run. These results supersede the earlier Java/emulator limitation recorded below.
+
+Verified through client-authenticated direct REST requests:
+
+- An applicant with no documents cannot submit, including when claiming `documentsValidated: true`.
+- Missing individual PDFs, an empty document map, pending/failed sets, foreign ownership, unsupported schema, non-PDF files, infected/failed/pending scans, empty files and files above 5 MiB all prevent submission (26 invalid manifests tested).
+- A server-owned `ready` manifest containing all three clean PDFs allows submission and reuse. The stored state value is lowercase `ready`.
+- Missing, nonexistent or malformed set IDs and legacy metadata flags cannot bypass the requirement. Clients cannot create/update manifests, create a manifest alongside an application in an atomic batch, or replace a submitted document reference; administrators cannot replace that reference either.
+- Regional and super-admin review start/approval/denial and atomic audit enforcement remain functional. Invalid/replayed/modified/deleted audits and unauthorized review attempts remain denied.
+- Applicant registration, own-profile reads/allowed edits, own-application reads and public vacancy behavior remain functional. Cross-applicant reads, role escalation, completed-profile region changes, unverified submissions and impersonated submissions remain denied.
+
+Related JavaScript regression suites also passed: **46 tests, 0 failures, 0 skips** across `application-documents`, `documents`, `profile`, `review-security` and `vacancies`. These exercise client behavior with mocks; the 12 tests above exercise actual emulator rules. No live Firebase deployment or file-scanner validation was performed in this run.
+
+The existing temporary Temurin Java 21.0.12.1+1 runtime and Firestore emulator 1.22.0 were used with Firebase CLI 15.32.1 and Node 24.20.0. Run from a fresh PowerShell process so all assignments remain process-local:
+
+```powershell
+$env:JAVA_HOME = Join-Path $env:TEMP 'nampol-firestore-test-tools\jdk-21.0.12.1+1-jre'
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+$env:FIREBASE_EMULATORS_PATH = Join-Path $env:TEMP 'nampol-firestore-test-tools\emulators'
+$env:XDG_CONFIG_HOME = Join-Path $env:TEMP 'nampol-firebase-validation'
+$env:CI = 'true'
+$env:DEBUG = ''
+firebase.cmd emulators:exec --only firestore --project demo-nampol-security --config firebase.security-tests.json "node --test --test-isolation=none tests/firestore-security.test.cjs"
+```
+
+No installer, registry changes, persistent PATH/JAVA_HOME edits, deployment, or GitHub push were used. The sandbox initially blocked the CLI's Java child process; the successful local emulator runs used approved execution outside that process restriction. The final run output is in `%TEMP%\nampol-firestore-test-tools\security-test-results-2026-10-22.log`; Firebase refreshed the ignored `firebase-debug.log` and `firestore-debug.log` files in the project.
+
+This verification changed only `tests/firestore-security.test.cjs` and this testing document, in addition to generated logs/temporary CLI state. Existing worktree edits were preserved, and the security rules were not edited or weakened. Tested rules SHA-256: `DD05A53AB2ED3D0F35AC7CD7A865A922E582B2C159586F3D940C190EB571ACA6`.
+
+**Deployment is still required to activate the updated local rules in Firebase.** These tests load the local rules into an emulator only; they do not update or inspect production rules. Deploy the reviewed `firestore.rules` when authorized, unless that exact version has already been deployed separately. Nothing was deployed here.
+
 ## Changes
 
 - `firestore.rules`: applicants retain signed-in access to their own profiles. Verified active regional administrators can read applicant profiles only in their stored region; super administrators retain access across regions. Regions used by the shared review/document helper must be nonempty strings.

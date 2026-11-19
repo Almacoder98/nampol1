@@ -1,12 +1,28 @@
 """Private Supabase REST adapter; credentials never enter responses."""
 
 from urllib.parse import quote
+import logging
 
 import httpx
 from fastapi import HTTPException
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
 MIMES = {"application/pdf", "image/jpeg", "image/png"}
+storage_logger = logging.getLogger("nampol.storage")
+
+
+def storage_failure(operation, error=None, code=None):
+    """Fixed labels only; never expose upstream text, URLs, headers or keys."""
+    status = error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None
+    if code is None:
+        code = ("storage_credentials_error" if status in (401, 403) else
+                "storage_bucket_missing" if status == 404 and operation == "bucket" else
+                "storage_request_error" if status == 400 else
+                "storage_connection_error" if isinstance(error, httpx.ConnectError) else
+                "storage_timeout" if isinstance(error, httpx.TimeoutException) else
+                "storage_service_error")
+    storage_logger.warning("Storage request failed: operation=%s reason=%s status=%s", operation, code, status)
+    return HTTPException(503, {"code": code, "message": "Private document storage is unavailable."})
 
 
 class SupabaseStorage:
@@ -27,9 +43,11 @@ class SupabaseStorage:
             response.raise_for_status()
             bucket = response.json()
             if bucket.get("public") is not False:
-                raise ValueError()
-        except Exception:
-            raise HTTPException(503, "Private storage is unavailable or bucket is not private.") from None
+                raise storage_failure("bucket", code="storage_bucket_not_private")
+        except HTTPException:
+            raise
+        except Exception as error:
+            raise storage_failure("bucket", error) from None
 
     def _path(self, path):
         if not path or any(part in ("", ".", "..") for part in path.split("/")):
@@ -44,8 +62,8 @@ class SupabaseStorage:
             response = self.client.post("object/" + self._path(path), content=content,
                                         headers={"Content-Type": mime, "x-upsert": "false"})
             response.raise_for_status()
-        except Exception:
-            raise HTTPException(503, "Document storage failed.") from None
+        except Exception as error:
+            raise storage_failure("upload", error) from None
 
     def download(self, path):
         self._check_private()
@@ -58,8 +76,8 @@ class SupabaseStorage:
                         raise ValueError()
                     content.extend(chunk)
                 return bytes(content)
-        except Exception:
-            raise HTTPException(503, "Document storage failed.") from None
+        except Exception as error:
+            raise storage_failure("download", error) from None
 
     def delete(self, path):
         self._check_private()
@@ -67,5 +85,5 @@ class SupabaseStorage:
             self._path(path)
             response = self.client.request("DELETE", "object/" + self.bucket, json={"prefixes": [path]})
             response.raise_for_status()
-        except Exception:
-            raise HTTPException(503, "Document cleanup requires retry.") from None
+        except Exception as error:
+            raise storage_failure("cleanup", error) from None

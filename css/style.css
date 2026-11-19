@@ -915,17 +915,8 @@ select.form-control option {
 }
 
 /* ============================================================
-   15. MFA & LOADING
+   15. LOADING
    ============================================================ */
-
-.mfa-section {
-    display: none;
-    margin-top: 20px;
-    padding: 15px;
-    background: rgba(233, 69, 96, 0.1);
-    border-radius: 10px;
-    border-left: 4px solid #e94560;
-}
 
 .loading {
     display: none;

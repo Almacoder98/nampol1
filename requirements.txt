@@ -5,3 +5,4 @@ httpx==0.28.1
 python-multipart==0.0.29
 Pillow==12.2.0
 pypdf==6.20.0
+fastembed==0.9.1

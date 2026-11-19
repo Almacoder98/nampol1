@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Login - NamPol Recruitment</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            color: white;
+            padding-top: 80px;
+        }
+
+        .admin-login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            margin: 40px auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(233, 69, 96, 0.25);
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        .btn-admin-login {
+            background: #0f3460;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-admin-login:hover {
+            background: #16213e;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-admin-login:disabled {
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .back-link {
+            color: #e94560;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #ff6b81;
+            text-decoration: underline;
+        }
+
+        .admin-badge {
+            background: #0f3460;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e94560;
+        }
+
+        .error-message {
+            display: none;
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #ff8a8a;
+            text-align: center;
+        }
+
+        .success-message {
+            display: none;
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #7ee2a8;
+            text-align: center;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.85) !important;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+        }
+
+        .nav-link {
+            color: white !important;
+            margin-left: 15px;
+        }
+
+        .nav-link:hover {
+            color: #e94560 !important;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .security-note {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ========================================================= -->
+<!-- NAVIGATION -->
+<!-- ========================================================= -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+
+        <a class="navbar-brand" href="index.html">
+            <strong>NamPol</strong> Recruitment
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+        >
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+
+            <ul class="navbar-nav ms-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">
+                        Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="login.html">
+                        Applicant Login
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="register.html">
+                        Applicant Registration
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="admin_login.html">
+                        Admin
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+    </div>
+</nav>
+
+
+<!-- ========================================================= -->
+<!-- ADMIN LOGIN -->
+<!-- ========================================================= -->
+
+<div class="container">
+
+    <div class="admin-login-container">
+
+        <div class="text-center mb-4">
+
+            <span class="admin-badge">
+                🔒 AUTHORIZED PERSONNEL ONLY
+            </span>
+
+            <h2>
+                NamPol Admin Login
+            </h2>
+
+            <p class="text-white-50">
+                Recruitment Officer / Administrator Portal
+            </p>
+            <p class="small">IT-provisioned accounts only. Sign in with your verified email and password.</p>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- ERROR MESSAGE -->
+        <!-- ================================================= -->
+
+        <div
+            class="error-message"
+            id="errorMessage"
+            role="alert"
+        ></div>
+
+
+        <!-- ================================================= -->
+        <!-- SUCCESS MESSAGE -->
+        <!-- ================================================= -->
+
+        <div
+            class="success-message"
+            id="successMessage"
+            role="alert"
+        ></div>
+
+
+        <!-- ================================================= -->
+        <!-- INFORMATION -->
+        <!-- ================================================= -->
+
+        <div class="info-box">
+
+            <small>
+
+                <strong>ℹ️ Restricted System</strong>
+
+                <br><br>
+
+                This portal is only available to authorized
+                Namibian Police Force recruitment personnel.
+
+                <br><br>
+
+                Administrator accounts are not created through
+                normal applicant registration.
+
+                <br><br>
+
+                New administrator accounts must first be
+                authorized by the system/IT administrator.
+
+            </small>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- LOGIN FORM -->
+        <!-- ================================================= -->
+
+        <form id="adminLoginForm">
+
+            <div class="mb-3">
+
+                <label
+                    for="adminEmail"
+                    class="form-label"
+                >
+                    Official Email Address
+                </label>
+
+                <input
+                    type="email"
+                    class="form-control"
+                    id="adminEmail"
+                    autocomplete="username"
+                    placeholder="Enter your registered admin email"
+                    required
+                >
+
+            </div>
+
+
+            <div class="mb-3">
+
+                <label
+                    for="password"
+                    class="form-label"
+                >
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    autocomplete="current-password"
+                    placeholder="Enter your password"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn btn-admin-login"
+                id="loginBtn"
+            >
+                Login to Admin Portal
+            </button>
+
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
+                <button type="button" class="btn btn-outline-light btn-sm" id="resendVerificationBtn">
+                    Resend verification email
+                </button>
+                <button type="button" class="btn btn-outline-light btn-sm" id="forgotPasswordBtn">
+                    Forgot Password?
+                </button>
+            </div>
+
+
+            <!-- Loading -->
+
+            <div
+                class="loading"
+                id="loading"
+            >
+
+                <div
+                    class="spinner-border text-light"
+                    role="status"
+                >
+                    <span class="visually-hidden">
+                        Loading...
+                    </span>
+                </div>
+
+                <p class="small mt-2">
+                    Authenticating and verifying administrator privileges...
+                </p>
+
+            </div>
+
+
+            <hr
+                style="
+                    border-color: rgba(255,255,255,0.2);
+                    margin: 25px 0;
+                "
+            >
+
+
+            <p class="security-note text-center">
+
+                Your administrator role, staff number,
+                region and unit are verified automatically.
+
+            </p>
+
+
+            <p class="text-center mb-0">
+
+                <a
+                    href="login.html"
+                    class="back-link"
+                >
+                    ← Back to Applicant Login
+                </a>
+
+            </p>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- ADMIN LOGIN JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script type="module">
+
+    import {
+        loginAdmin,
+        resendAdminVerificationEmail,
+        resetAdminPassword,
+        redirectIfAdminLoggedIn
+    } from "../js/admin.js";
+
+
+    // ========================================================
+    // PAGE ELEMENTS
+    // ========================================================
+
+    const loginForm =
+        document.getElementById("adminLoginForm");
+
+    const emailInput =
+        document.getElementById("adminEmail");
+
+    const passwordInput =
+        document.getElementById("password");
+
+    const loginButton =
+        document.getElementById("loginBtn");
+
+    const loading =
+        document.getElementById("loading");
+
+    const errorMessage =
+        document.getElementById("errorMessage");
+
+    const successMessage =
+        document.getElementById("successMessage");
+
+    const resendButton = document.getElementById("resendVerificationBtn");
+    const resetButton = document.getElementById("forgotPasswordBtn");
+
+
+    // ========================================================
+    // MESSAGE FUNCTIONS
+    // ========================================================
+
+    function hideMessages() {
+
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+
+        errorMessage.textContent = "";
+        successMessage.textContent = "";
+    }
+
+
+    function showError(message) {
+
+        successMessage.style.display = "none";
+
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+    }
+
+
+    function showSuccess(message) {
+
+        errorMessage.style.display = "none";
+
+        successMessage.textContent = message;
+        successMessage.style.display = "block";
+    }
+
+
+    function setLoading(isLoading) {
+
+        loading.style.display =
+            isLoading ? "block" : "none";
+
+        loginButton.disabled = isLoading;
+        resendButton.disabled = isLoading;
+        resetButton.disabled = isLoading;
+
+        emailInput.disabled = isLoading;
+        passwordInput.disabled = isLoading;
+    }
+
+
+    // ========================================================
+    // ADMIN LOGIN
+    // ========================================================
+
+    loginForm.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+            hideMessages();
+
+
+            const email =
+                emailInput.value.trim().toLowerCase();
+
+            const password =
+                passwordInput.value;
+
+
+            if (!email || !password) {
+
+                showError(
+                    "Please enter your email address and password."
+                );
+
+                return;
+            }
+
+
+            setLoading(true);
+
+
+            let result;
+            try {
+                result = await loginAdmin(email, password);
+            } catch {
+                showError("Unable to complete authentication or sign out. Please reload the page and try again.");
+                return;
+            } finally {
+                setLoading(false);
+            }
+
+
+            if (!result.success) {
+
+                showError(
+                    "Access denied: " + result.error
+                );
+
+                return;
+            }
+
+
+            showSuccess(
+                "Login successful. Administrator verified. Redirecting..."
+            );
+            setLoading(true);
+
+
+            setTimeout(function () {
+
+                window.location.href = "admin.html";
+
+            }, 1000);
+        }
+    );
+
+    async function requestRecoveryEmail(resend) {
+        hideMessages();
+        if (!emailInput.reportValidity()) return;
+        if (resend && !passwordInput.reportValidity()) return;
+        const email = emailInput.value.trim().toLowerCase();
+        setLoading(true);
+        try {
+            const result = resend
+                ? await resendAdminVerificationEmail(email, passwordInput.value)
+                : await resetAdminPassword(email);
+            if (result.success) showSuccess(result.message);
+            else showError(result.error);
+        } catch {
+            showError("Unable to complete the request or sign out. Please reload the page and try again.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    resendButton.addEventListener("click", () => requestRecoveryEmail(true));
+    resetButton.addEventListener("click", () => requestRecoveryEmail(false));
+
+
+    // ========================================================
+    // CHECK EXISTING FIREBASE SESSION
+    // ========================================================
+
+    redirectIfAdminLoggedIn();
+
+</script>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+></script>
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "recorded_at_utc": "2026-10-24T22:54:54.409151+00:00",
+  "phase": 5,
+  "scope": "LOCAL_COMPOSITION_AND_EMULATOR; NOT_LIVE_PROVIDER_OR_BROWSER_E2E",
+  "firebase_sms_configuration": "PENDING",
+  "smtp_delivery": "PENDING",
+  "real_sms_or_emails_sent": false,
+  "live_accounts_created": false,
+  "genuine_records_changed": false,
+  "deployed": false,
+  "billing_changed": false,
+  "pushed": false,
+  "python": {
+    "exit_code": 0,
+    "log": ".nampol/phase5-python-results.log",
+    "collected": 152,
+    "skipped": 6,
+    "failed": 0,
+    "passed": 146
+  },
+  "javascript": {
+    "exit_code": 0,
+    "log": ".nampol/phase5-javascript-results.log",
+    "passed": 96,
+    "failed": 0,
+    "skipped": 0
+  },
+  "firestore_emulator": {
+    "exit_code": 0,
+    "log": ".nampol/phase5-firestore_emulator-results.log",
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0
+  },
+  "launcher": {
+    "exit_code": 0,
+    "log": ".nampol/phase5-launcher-results.log",
+    "offline_check_groups_passed": 9,
+    "full_restart": "SKIPPED - preserve existing processes"
+  },
+  "total": {
+    "passed": 266,
+    "failed": 0,
+    "skipped": 6
+  },
+  "shortlisting": {
+    "new_focused_cases": 26,
+    "internal_records": "serverShortlists",
+    "retry_receipts": "serverShortlistRequests",
+    "safe_owner_status": "applicantShortlistStatuses",
+    "trusted_writes_only": true,
+    "application_decisions_unchanged_by_selection": true,
+    "shortlist_emails_sent": false,
+    "live_browser_verification": "NOT TESTED",
+    "rules_deployed": false,
+    "servers_restarted": false
+  },
+  "firestore_rules_sha256": "e23be8d9464a7d865b30e2b8a94b17d1e40b28b505fd6f15ed14d5193dd48c49",
+  "unchanged_configuration": [
+    "storage.rules",
+    "firebase.json"
+  ],
+  "guide": "PHASE5_SHORTLISTING.md"
+}

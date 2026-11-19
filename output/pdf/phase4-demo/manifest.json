@@ -1,0 +1,47 @@
+{
+  "label": "SYNTHETIC ONLY",
+  "documents": [
+    {
+      "path": "output/pdf/phase4-demo/alpha-cv.pdf",
+      "bytes": 2484,
+      "sha256": "dcea282e11dabd660f2a013b890b62022814017c157561656011f3c53d63491f",
+      "pages": 1,
+      "synthetic": true
+    },
+    {
+      "path": "output/pdf/phase4-demo/alpha-qualification.pdf",
+      "bytes": 2313,
+      "sha256": "8ac2beaf38dd95b8ebd5ae1655afe5bbe09b5dc4754699d86bd3489add4e7182",
+      "pages": 1,
+      "synthetic": true
+    },
+    {
+      "path": "output/pdf/phase4-demo/alpha-identification.pdf",
+      "bytes": 2194,
+      "sha256": "ecd4d6bbe2db923f51ae13e70d3b0dc6fee9a953dbd608c9ad31b748cf087b62",
+      "pages": 1,
+      "synthetic": true
+    },
+    {
+      "path": "output/pdf/phase4-demo/beta-cv.pdf",
+      "bytes": 2402,
+      "sha256": "3c53ca65c61ee6aea629ef53dcde4140a4b020dddc0fb5211f280312098d0abf",
+      "pages": 1,
+      "synthetic": true
+    },
+    {
+      "path": "output/pdf/phase4-demo/beta-qualification.pdf",
+      "bytes": 2298,
+      "sha256": "77db0b0d831e34348510d4014f8a86b718509d28427373f9bfbeb72ae4e38e97",
+      "pages": 1,
+      "synthetic": true
+    },
+    {
+      "path": "output/pdf/phase4-demo/beta-identification.pdf",
+      "bytes": 2192,
+      "sha256": "88c609d4fc7bf59da7e6a860757a66a9b1ae5956885a833468cc59476a4a49a5",
+      "pages": 1,
+      "synthetic": true
+    }
+  ]
+}

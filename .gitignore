@@ -12,6 +12,9 @@ application_default_credentials.json
 *.pfx
 /secrets/
 /credentials/
+*.clixml
+/.nampol/
+/local-config/
 
 # Python
 __pycache__/

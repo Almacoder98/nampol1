@@ -30,8 +30,8 @@
         }
 
         .profile-header {
-            background-color: #0b3b6f;
-            color: white;
+            background-color: white;
+            color: #0b3b6f;
             padding: 25px;
             border-radius: 14px 14px 0 0;
         }
@@ -57,6 +57,7 @@
             color: #dc3545;
         }
     </style>
+<script type="module" src="../js/session-guard.js"></script>
 </head>
 
 <body>
@@ -87,15 +88,12 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
 
                 <div>
-                    <h2 class="mb-1">Applicant Profile</h2>
-                    <p class="mb-0">
-                        NamPol E-Recruitment System
-                    </p>
+                    <h2 class="mb-0">My Applicant Profile</h2>
                 </div>
 
                 <button
                     id="logoutBtn"
-                    class="btn btn-outline-light"
+                    class="btn btn-outline-primary"
                     type="button"
                 >
                     Logout
@@ -114,13 +112,22 @@
             ></div>
 
 
-            <form id="profileForm">
+            <h5 class="section-title">Personal Information</h5>
+            <div id="profileSummary" class="d-none">
+                <dl class="row mb-3">
+                    <dt class="col-sm-4">Full name</dt><dd id="savedFullName" class="col-sm-8"></dd>
+                    <dt class="col-sm-4">Email</dt><dd id="savedEmail" class="col-sm-8"></dd>
+                    <dt class="col-sm-4">Contact number</dt><dd id="savedPhone" class="col-sm-8"></dd>
+                    <dt class="col-sm-4">Region</dt><dd id="savedRegion" class="col-sm-8"></dd>
+                    <dt class="col-sm-4">Academic points</dt><dd id="savedAcademicPoints" class="col-sm-8"></dd>
+                </dl>
+                <button id="editProfileBtn" class="btn btn-primary mb-4" type="button">Edit Profile</button>
+            </div>
+            <form id="profileForm" class="d-none">
 
                 <!-- PERSONAL INFORMATION -->
 
-                <h5 class="section-title">
-                    Personal Information
-                </h5>
+
 
                 <div class="row g-3 mb-4">
 
@@ -230,9 +237,7 @@
 
                 <!-- CONTACT INFORMATION -->
 
-                <h5 class="section-title">
-                    Contact Information
-                </h5>
+
 
                 <div class="row g-3 mb-4">
 
@@ -317,9 +322,7 @@
 
                 <!-- ADDITIONAL PROFILE INFORMATION -->
 
-                <h5 class="section-title">
-                    Additional Information
-                </h5>
+
 
                 <div class="row g-3 mb-4">
 
@@ -378,6 +381,12 @@
 
 
                     <div class="col-md-6">
+                        <label for="academicPoints" class="form-label">Academic / qualification points (optional)</label>
+                        <input id="academicPoints" type="number" min="0" step="1" class="form-control" aria-describedby="academicPointsHelp">
+                        <div id="academicPointsHelp" class="form-text">Enter your existing whole-number points total, if applicable. Leave blank if unavailable. Administrators verify it against your qualification PDF; this does not calculate or verify points.</div>
+                    </div>
+
+                    <div class="col-md-6">
 
                         <label
                             for="employmentStatus"
@@ -429,7 +438,7 @@
                             class="form-control"
                             rows="3"
                             maxlength="500"
-                            placeholder="Example: Computer literacy, communication, driving, first aid"
+
                         ></textarea>
 
                         <div class="form-text">
@@ -441,14 +450,9 @@
                 </div>
 
 
-                <div class="alert alert-info">
-                    Your account information is protected.
-                    Your role and account status cannot be changed from this page.
-                </div>
-
-
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
 
+                    <button id="cancelEditBtn" type="button" class="btn btn-outline-secondary d-none">Cancel</button>
                     <button
                         id="saveBtn"
                         type="submit"
@@ -460,6 +464,19 @@
                 </div>
 
             </form>
+            <section id="uploadedDocumentsSection" class="mt-4">
+                <h5 class="section-title">My Uploaded Documents</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <tbody>
+                            <tr><th scope="row">Curriculum Vitae (CV)</th><td id="cvFileName">&mdash;</td><td><button id="viewCvBtn" type="button" class="btn btn-link d-none" aria-label="View CV PDF">View PDF</button></td></tr>
+                            <tr><th scope="row">Qualifications</th><td id="certificateFileName">&mdash;</td><td><button id="viewCertificateBtn" type="button" class="btn btn-link d-none" aria-label="View qualifications PDF">View PDF</button></td></tr>
+                            <tr><th scope="row">Identification Document</th><td id="identificationFileName">&mdash;</td><td><button id="viewIdentificationBtn" type="button" class="btn btn-link d-none" aria-label="View identification PDF">View PDF</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <a href="documents.html" class="btn btn-primary">Upload Documents</a>
+            </section>
 
         </div>
     </div>

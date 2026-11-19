@@ -193,6 +193,7 @@
             }
         }
     </style>
+<script type="module" src="../js/session-guard.js"></script>
 </head>
 
 <body>
@@ -319,10 +320,10 @@
                 </a>
 
                 <a
-                    href="documents.html"
+                    href="profile.html"
                     class="btn btn-secondary-dashboard"
                 >
-                    My Documents
+                    My Profile
                 </a>
 
             </div>
@@ -526,6 +527,11 @@
 <!-- ====================================================== -->
 
 <script type="module">
+import { watchApplicantApplications, applicantShortlistLabel } from "../js/application-status.js";
+let stopApplicantUpdates = () => {};
+let dashboardDocumentsReady = false;
+window.addEventListener("pagehide", () => stopApplicantUpdates());
+
 
 import {
     auth,
@@ -629,10 +635,8 @@ function normaliseStatus(status) {
         return "Under Review";
     }
 
-    if (
-        value === "approved" ||
-        value === "shortlisted"
-    ) {
+    if (value === "shortlisted") return "Shortlisted";
+    if (value === "approved") {
         return "Approved";
     }
 
@@ -658,7 +662,7 @@ function getStatusClass(status) {
         return "status-submitted";
     }
 
-    if (normalised === "Under Review") {
+    if (normalised === "Under Review" || normalised === "Shortlisted") {
         return "status-review";
     }
 
@@ -876,6 +880,7 @@ function renderApplications(applications) {
                     >
                         ${escapeHTML(status)}
                     </span>
+                    <small class="d-block mt-1">${escapeHTML(applicantShortlistLabel(application))}</small>
 
                 </td>
 
@@ -1008,6 +1013,9 @@ function renderNotifications(
                 Please open your application status for details.
             `;
 
+        } else if (status === "Shortlisted") {
+            message.className = "alert alert-info";
+            message.textContent = `Application ${reference} is shortlisted for consideration. This is not final approval.`;
         } else if (status === "Under Review") {
 
             message.className =
@@ -1166,6 +1174,7 @@ async function loadDashboard(user) {
             documentSnapshot.data()
                 .documentsValidated === true;
 
+        dashboardDocumentsReady = documentsReady;
         if (!documentsReady) {
             window.location.href = "documents.html";
             return;
@@ -1282,6 +1291,8 @@ onAuthStateChanged(
     auth,
     async user => {
 
+        stopApplicantUpdates();
+
         if (!user) {
 
             window.location.href =
@@ -1303,6 +1314,13 @@ onAuthStateChanged(
 
 
         await loadDashboard(user);
+        try {
+            stopApplicantUpdates = await watchApplicantApplications(user, applications => {
+                renderApplications(applications);
+                renderNotifications(applications, dashboardDocumentsReady);
+            }, showDashboardError);
+        } catch { showDashboardError("Live status updates require a verified email session."); }
+
     }
 );
 

@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 from fastapi import Depends, HTTPException
 from fastapi.testclient import TestClient
 from firebase_admin import auth
+from firebase_admin import exceptions as firebase_errors
 
 from app import (Authorization, FIREBASE_PROJECT, FirestoreManifestRepository,
                  Principal, Settings, create_app, current_principal,
@@ -17,7 +18,8 @@ class BackendTests(unittest.TestCase):
             with self.assertLogs("nampol.auth", level="WARNING") as captured:
                 with self.assertRaises(HTTPException) as caught:
                     verify_firebase_token("private-token", None)
-        self.assertEqual(caught.exception.status_code, 401)
+        self.assertEqual(caught.exception.status_code, 503)
+        self.assertEqual(caught.exception.detail["code"], "auth_clock_error")
         logged = " ".join(captured.output)
         self.assertIn("reason=server_clock_behind_token", logged)
         self.assertNotIn("private-token", logged)
@@ -36,7 +38,7 @@ class BackendTests(unittest.TestCase):
     def claims(self, **changes):
         return {"uid": "alice", "aud": FIREBASE_PROJECT,
                 "iss": f"https://securetoken.google.com/{FIREBASE_PROJECT}",
-                "email_verified": True, **changes}
+                "email_verified": True, "firebase": {"sign_in_provider": "password"}, **changes}
 
     def test_token_verification_and_revocation_option(self):
         with patch("app.auth.verify_id_token", return_value=self.claims()) as verify:
@@ -63,6 +65,42 @@ class BackendTests(unittest.TestCase):
                 verify_firebase_token("token", None)
             self.assertEqual(caught.exception.status_code, 503)
 
+    def test_expiry_project_and_backend_permissions_are_distinct(self):
+        cases = (
+            (auth.ExpiredIdTokenError("private", None), 401, "session_expired", "expired"),
+            (auth.InvalidIdTokenError("incorrect audience private"), 503, "auth_project_error", "audience_mismatch"),
+            (auth.InvalidIdTokenError("incorrect issuer private"), 503, "auth_project_error", "issuer_mismatch"),
+            (firebase_errors.PermissionDeniedError("private"), 503, "auth_backend_error", "backend_credentials_or_permission"),
+            (firebase_errors.UnauthenticatedError("private"), 503, "auth_backend_error", "backend_credentials_or_permission"),
+        )
+        for failure, status, code, reason in cases:
+            with self.subTest(code=code), patch("app.auth.verify_id_token", side_effect=failure):
+                with self.assertLogs("nampol.auth", level="WARNING") as captured:
+                    with self.assertRaises(HTTPException) as caught:
+                        verify_firebase_token("private-token", None)
+                self.assertEqual(caught.exception.status_code, status)
+                self.assertEqual(caught.exception.detail["code"], code)
+                self.assertIn("reason=" + reason, " ".join(captured.output))
+                self.assertNotIn("private", str(caught.exception.detail) + " ".join(captured.output))
+
+    def test_authentication_failure_rejects_upload_before_document_service(self):
+        application = create_app(False)
+        application.state.firebase_app = "mock-sdk-app"
+        application.state.documents = Mock()
+        with TestClient(application) as client:
+            for failure, status, code in (
+                (auth.InvalidIdTokenError("Token used too early"), 503, "auth_clock_error"),
+                (auth.ExpiredIdTokenError("expired", None), 401, "session_expired"),
+                (firebase_errors.PermissionDeniedError("private"), 503, "auth_backend_error"),
+            ):
+                with patch("app.auth.verify_id_token", side_effect=failure):
+                    response = client.post("/api/me/document-sets", content=b"synthetic-invalid-body",
+                                           headers={"Authorization": "Bearer private-token"})
+                self.assertEqual(response.status_code, status)
+                self.assertEqual(response.json()["detail"]["code"], code)
+        application.state.documents.authorization.applicant.assert_not_called()
+        application.state.documents.upload.assert_not_called()
+
     def test_applicant_checks(self):
         records = Mock()
         checks = Authorization(records)
@@ -80,7 +118,12 @@ class BackendTests(unittest.TestCase):
         records = Mock()
         checks = Authorization(records)
         for role in ("admin", "recruiter", "super_admin"):
-            records.read.return_value = {"active": True, "role": role, "region": "Khomas"}
+            import hashlib
+            index_id = hashlib.sha256(b'NAMPOL-001').hexdigest()
+            record = {"active": True, "role": role, "region": "Khomas", "provisioningVersion": 1,
+                      "staffNumber": "NAMPOL-001", "staffCodeId": index_id}
+            records.read.side_effect = lambda collection, uid: (record if collection == 'admins' else
+                {'uid': 'staff', 'staffNumber': 'NAMPOL-001', 'state': 'active'})
             checks.administrator(Principal("staff"), "Khomas")
             if role == "super_admin":
                 checks.administrator(Principal("staff"), "Erongo")
@@ -89,6 +132,7 @@ class BackendTests(unittest.TestCase):
                     with self.assertRaises(HTTPException):
                         checks.administrator(Principal("staff"), region)
         for record in (None, {"active": False, "role": "super_admin"}, {"active": True, "role": "applicant"}):
+            records.read.side_effect = None
             records.read.return_value = record
             with self.assertRaises(HTTPException):
                 checks.administrator(Principal("staff"), "Khomas")

@@ -134,6 +134,7 @@ class DocumentTests(unittest.TestCase):
     def upload(self):
         result = self.service.upload(self.actor, self.files)
         self.storage.download.return_value = self.content
+        self.db.data[("applications", "application")].setdefault("documentSetId", result["setId"])
         return result
 
     def client(self, actor=None):
@@ -300,7 +301,10 @@ class DocumentTests(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
         for role, region, active, expected in (("admin", "Khomas", True, 200), ("recruiter", "Erongo", True, 403),
                                               ("super_admin", "Erongo", True, 200), ("admin", "Khomas", False, 403)):
-            self.db.data[("admins", "staff")] = {"role": role, "region": region, "active": active}
+            index_id = hashlib.sha256(b'NAMPOL-001').hexdigest()
+            self.db.data[("admins", "staff")] = {"role": role, "region": region, "active": active,
+                "provisioningVersion": 1, "staffNumber": "NAMPOL-001", "staffCodeId": index_id}
+            self.db.data[("adminStaffCodes", index_id)] = {'uid': 'staff', 'staffNumber': 'NAMPOL-001', 'state': 'active'}
             with self.client(Principal("staff")) as client:
                 response = client.get("/api/applications/application/documents/cv/download")
                 self.assertEqual(response.status_code, expected)

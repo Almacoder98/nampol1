@@ -112,6 +112,50 @@ test('backend unavailable during initial reconciliation leaves upload disabled',
     await s.callback(s.user); assert.equal(s.node('saveDocumentsBtn').disabled, true);
     assert.match(s.node('alertBox').textContent, /backend is running/);
 });
+
+test('clock, project and backend credential failures give operator guidance without retrying POST', async () => {
+    for (const [code, message] of [['auth_clock_error', /clock/], ['auth_project_error', /project/],
+        ['auth_backend_error', /credentials and permissions/]]) {
+        const s = await setup(); s.reply(503, { detail: { code } }); await s.submit();
+        assert.match(s.node('alertBox').textContent, message);
+        assert.doesNotMatch(s.node('alertBox').textContent, /expired|log in again|outcome could not be confirmed/);
+        assert.equal(s.requests.length, 1);
+        assert.equal(s.node('saveDocumentsBtn').disabled, false);
+        assert.doesNotMatch(s.node('alertBox').className, /success/);
+    }
+});
+
+test('only an explicit expiry code reports an expired session', async () => {
+    for (const [code, expired] of [['session_expired', true], ['authentication_rejected', false], [undefined, false]]) {
+        const s = await setup(); s.reply(401, { detail: { code } }); await s.submit();
+        assert.equal(/session has expired/.test(s.node('alertBox').textContent), expired);
+        assert.equal(s.requests.length, 1);
+    }
+});
+
+test('refresh network failures do not send documents or claim the session expired', async () => {
+    const s = await setup();
+    s.user.getIdToken = async () => { throw { code: 'auth/network-request-failed' }; };
+    await s.submit();
+    assert.equal(s.requests.length, 0);
+    assert.match(s.node('alertBox').textContent, /connection/);
+    assert.doesNotMatch(s.node('alertBox').textContent, /expired|log in again/);
+});
+
+test('storage failures explain the cause, require reconciliation and never retry POST', async () => {
+    for (const [code, message] of [['storage_credentials_error', /credentials/],
+        ['storage_connection_error', /DNS/], ['storage_bucket_missing', /bucket/],
+        ['storage_bucket_not_private', /not private/], ['storage_timeout', /timed out/],
+        ['storage_request_error', /storage request/], ['storage_service_error', /unavailable/]]) {
+        const s = await setup(); s.reply(503, { detail: { code } }); await s.submit();
+        assert.match(s.node('alertBox').textContent, message);
+        assert.match(s.node('alertBox').textContent, /Reload/);
+        assert.equal(s.node('saveDocumentsBtn').disabled, true);
+        assert.equal(s.requests.length, 1);
+        await s.submit(); assert.equal(s.requests.length, 1);
+        assert.doesNotMatch(s.node('alertBox').className, /success/);
+    }
+});
 test('timeout aborts the request and prevents an automatic resubmission', async () => {
     const s = await setup();
     s.context.setTimeout = handler => { queueMicrotask(handler); return 1; };

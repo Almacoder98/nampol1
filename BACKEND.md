@@ -40,6 +40,22 @@ Do not start a second daemon if port 3310 is already listening. The config
 should keep `TCPAddr 127.0.0.1`, and its `StreamMaxLength` must cover the
 backend's 5 MiB file limit. This config has no `LogFile` directive, so
 foreground debug output goes to the terminal rather than a ClamAV log file.
+Wait for `TCP: Bound to [127.0.0.1]:3310` and `SelfCheck: Database status OK`
+before starting FastAPI. A startup warning that the virus database is older
+than seven days means signatures should be refreshed before application
+testing; it does not mean the daemon is ready. Refresh the database from a
+second terminal with the matching user configuration:
+
+```powershell
+$freshclam = "C:\Program Files\ClamAV\freshclam.exe"
+$freshconf = Join-Path $env:LOCALAPPDATA "ClamAV\freshclam.conf"
+& $freshclam "--config-file=$freshconf"
+```
+
+Then restart `clamd` and verify the loopback listener. The application launcher
+also performs a protocol-level PING and harmless INSTREAM scan, so a missing
+listener or failed scan blocks backend/frontend startup rather than allowing
+uploads to run without malware scanning.
 For the backend, set `CLAMAV_PORT=3310`. Availability and protocol checks do not
 certify signature freshness; malware scanning remains fail-closed.
 
@@ -491,3 +507,127 @@ it has not been reproduced through a live applicant upload because authenticatio
 still blocks that workflow. No changes to scanning or token acceptance policy
 were made to force a passing result. Live Supabase storage/privacy and actual
 uploaded applicant linkage remain unverified.
+
+### Authentication investigation and clock repair (20 October 2026)
+
+The clock defect is now measured independently of browser authentication:
+`w32tm /stripchart /computer:time.windows.com /dataonly /samples:3` returned
++3.987, +3.992 and +3.988 seconds; a later sample was +4.005 seconds. Windows
+Time remained Stopped/Manual and its status query returned 0x80070426. Fresh,
+uncached Google HTTPS response timestamps corroborated approximately 4–5
+seconds of lag (less precise because of network latency and timestamp rounding).
+Only the external service-account file's project ID was compared, without
+printing its contents; it matches the frontend/backend `nampol-recruitment`.
+
+The actual Firebase SDK was exercised offline using ephemeral RSA keys and
+synthetic claims. With the verifier clock four seconds behind issued-at, the
+signed token fails with `reason=server_clock_behind_token`; the identical token
+passes at its issued-at time, including the SDK's user revocation/disabled check.
+Force-refreshing immediately before GET/POST explains why refreshing does not
+resolve this clock defect. No clock-skew allowance, expiry grace, sleep/retry
+workaround, emulator, or verification bypass was added.
+
+This confirms a reproducible cause, not the historical request's exact label:
+no backend/frontend listener or accessible browser session was available during
+this investigation. Real test-applicant revocation, current profile permissions,
+and deployed IAM permissions could not be checked without that live session.
+This tool shell also lacks the privately configured server environment. Do not
+infer that the existing dedicated backend terminal has lost its configuration.
+
+`app.py` now returns safe structured authentication errors: expired sessions
+remain 401 (`session_expired`); invalid/revoked/disabled sessions remain 401;
+clock and project failures return 503 (`auth_clock_error`/`auth_project_error`);
+Firebase backend credential/permission errors return 503 (`auth_backend_error`).
+Other verification outages remain fail-closed 503. Fixed log labels additionally
+identify email verification, owner mismatch, missing profile, wrong applicant
+role, inactive account and incomplete profile, without logging identities or
+tokens. Applicant authorization remains 403 with unchanged access requirements.
+
+`js/documents.js` distinguishes these backend errors from session expiry and
+refresh network/throttling failures. Only explicit authentication errors known
+to precede document processing are safe to retry manually without reconciliation;
+POST is never automatically retried. Other ambiguous failures retain the existing
+reload/reconciliation requirement. All signature, issuer/audience, expiry,
+revocation, verified-email and applicant-profile checks remain enforced.
+
+Starting Windows Time was attempted but Windows denied service-control access.
+No time or service setting was changed. The underlying OS repair remains pending.
+Open PowerShell **as Administrator** and run:
+
+```powershell
+Set-Service -Name W32Time -StartupType Automatic
+Start-Service -Name W32Time
+w32tm /resync
+w32tm /query /status
+w32tm /stripchart /computer:time.windows.com /dataonly /samples:3
+```
+
+Confirm synchronization succeeds and the offset is close to zero. If resync
+fails, resolve the Windows time source/network issue before browser testing;
+do not increase token tolerance to hide it. Domain-managed machines should use
+their organization's time source; no peer/source override is proposed here.
+
+Then restart FastAPI in the privately configured terminal on 127.0.0.1:8001
+and restart `scripts/serve_frontend.py --port 8000` so its allowlisted snapshot
+contains the changed JavaScript. Keep ClamAV ready on loopback 3310. Open
+`http://127.0.0.1:8000/Frontend/documents.html`, sign in privately as the verified,
+active test applicant with completed profile, and first confirm GET document
+reconciliation succeeds. Only then upload three synthetic PDFs and confirm a
+ready set ID survives reload. If authentication still fails, record only the
+HTTP status and safe `reason=` label; never copy an Authorization header/token.
+
+Validation: full Python discovery ran 60 tests, 54 passed, six skipped (four
+Windows symlink privilege checks and two opt-in live-ClamAV tests). This includes
+all 43 authentication/backend/document tests. JavaScript document/review/vacancy
+regressions passed 27/27. SDK tests reject expired tokens without grace, invalid
+signatures, wrong projects, disabled users and revoked tokens; HTTP tests confirm
+authentication failures never invoke upload processing. No cloud uploads,
+credential changes, administrator features or GitHub pushes were made.
+
+### Storage readiness and document failure diagnostics
+
+The saved Supabase hostname still failed DNS lookup (Windows error 11001) during
+the document-upload investigation. The separately supplied public project URL
+resolved, but read-only Auth settings and REST checks rejected the saved key with
+401 Invalid API key. These checks do not prove that key is invalid everywhere;
+they show it did not authenticate against that supplied project. No key values,
+tokens, applicant identifiers or document content were printed. At the start of
+the latest inspection neither application server was listening. Firebase and
+scanner success from an earlier request therefore must not be confused with
+current full live upload readiness.
+
+The launcher now uses `python -m backend.preflight` to check the configured
+private bucket before it saves new configuration or starts application servers.
+Only a successful read with `public=false` passes. It prints fixed safe codes and
+discards raw subprocess errors. `-Configure -SaveCredentials` privately replaces
+stale URL/key values, ignoring inherited Supabase values for that launch, while
+retaining the existing Firebase path. Replacement configuration is only saved
+after successful storage readiness. It does not change bucket settings or rules.
+
+The storage adapter now maps upstream errors to credential-free codes and logs
+fixed operation/reason/status labels. Document UI errors explain those codes
+instead of hiding every storage failure behind an uncertain-outcome message.
+Uploads still require reload/reconciliation after storage failures; no automatic
+POST retry or success assertion was added. Secret keys remain apikey headers on
+server-side requests. No unverified Authorization-header workaround was added:
+the previously supplied project rejected the saved key at Auth/REST endpoints.
+
+Validation: Python discovery ran 63 tests, 57 passed and six skipped (four Windows
+symlink checks and two opt-in real-scanner tests). All 28 JavaScript regressions
+passed. Both opt-in real-ClamAV multipart tests subsequently passed, exercising
+PDF validation, ready publication/linkage and integrity-checked download with
+in-memory cloud fixtures. Launcher regression tests passed encrypted storage,
+reconfiguration, readiness failure handling, output redaction, credential
+isolation, real local server startup and cleanup. Synthetic test servers and
+temporary credentials were removed. No live cloud documents were uploaded.
+
+An initial launcher test hit a scanner-readiness failure. Three later PINGs,
+three real scans (0.639/0.031/0.024 seconds), the repeated launcher test and both
+real-scanner HTTP tests passed. This intermittent availability failure is not
+claimed resolved by the subsequent successes. Scanner security/timeouts and
+daemon settings were unchanged; a readiness failure still blocks startup.
+
+Live upload completion remains pending a verified matching project URL/key pair
+entered privately in the user's terminal. Do not claim Supabase uploads or
+cloud-to-applicant linkage passed until an actual synthetic applicant upload
+returns ready and survives reload. Existing failed manifests remain untouched.

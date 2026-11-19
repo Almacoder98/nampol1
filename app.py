@@ -1,4 +1,4 @@
-"""Phase 2A server-only document API."""
+"""NamPol backend: authentication, administrator profiles and private documents."""
 
 import asyncio
 import json
@@ -14,6 +14,7 @@ from uuid import uuid4
 
 import firebase_admin
 from firebase_admin import auth, credentials, firestore
+from firebase_admin import exceptions as firebase_errors
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
@@ -23,6 +24,10 @@ from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from backend.documents import DocumentRepository, DocumentService, safe_manifest
+from backend.admin_security import AdminSecurity, active_admin
+from backend.screening import ScreeningService
+from backend.notifications import NotificationDispatcher, configured_transport
+from backend.shortlisting import ShortlistService
 from backend.storage import SupabaseStorage
 from backend.validation import (ClamAVScanner, DOCUMENT_TYPES, MAX_FILE_SIZE,
                                 MAX_REQUEST_SIZE, bounded_body)
@@ -112,19 +117,20 @@ class Authorization:
 
     def applicant(self, principal: Principal, owner_uid: str):
         if principal.uid != valid_identifier(owner_uid):
+            auth_logger.warning("Applicant authorization rejected: reason=owner_mismatch")
             raise HTTPException(403, "Access denied.")
         record = self.records.read("users", principal.uid)
-        if (not record or record.get("role") != "applicant"
-                or record.get("accountStatus") != "active"
-                or record.get("profileCompleted") is not True):
+        reason = ("profile_missing" if not record else
+                  "applicant_role_required" if record.get("role") != "applicant" else
+                  "account_inactive" if record.get("accountStatus") != "active" else
+                  "profile_incomplete" if record.get("profileCompleted") is not True else None)
+        if reason:
+            auth_logger.warning("Applicant authorization rejected: reason=%s", reason)
             raise HTTPException(403, "Access denied.")
         return record
 
     def administrator(self, principal: Principal, region: str):
-        record = self.records.read("admins", principal.uid)
-        if (not record or record.get("active") is not True
-                or record.get("role") not in ADMIN_ROLES):
-            raise HTTPException(403, "Access denied.")
+        record = active_admin(self.records, principal.uid)
         if record["role"] != "super_admin" and (
                 not isinstance(region, str) or not region.strip()
                 or record.get("region") != region):
@@ -188,19 +194,31 @@ def verify_firebase_token(token, firebase_app):
     except (auth.InvalidIdTokenError, auth.ExpiredIdTokenError,
             auth.RevokedIdTokenError, auth.UserDisabledError,
             auth.UserNotFoundError, ValueError) as error:
-        auth_logger.warning("Firebase authentication rejected: reason=%s", token_rejection_reason(error))
-        raise HTTPException(401, "Invalid or expired authentication.") from None
+        reason = token_rejection_reason(error)
+        auth_logger.warning("Firebase authentication rejected: reason=%s", reason)
+        if reason in {"server_clock_behind_token", "audience_mismatch", "issuer_mismatch"}:
+            # Refreshing a session cannot repair server time or project configuration.
+            # Keep strict SDK time/signature/revocation checks; never accept these tokens.
+            code = "auth_clock_error" if reason == "server_clock_behind_token" else "auth_project_error"
+            raise HTTPException(503, {"code": code, "message": "Authentication configuration unavailable."}) from None
+        code = "session_expired" if reason == "expired" else "authentication_rejected"
+        raise HTTPException(401, {"code": code, "message": "Authentication rejected. Please log in again."}) from None
+    except (firebase_errors.PermissionDeniedError, firebase_errors.UnauthenticatedError):
+        auth_logger.warning("Firebase authentication unavailable: reason=backend_credentials_or_permission")
+        raise HTTPException(503, {"code": "auth_backend_error", "message": "Authentication service unavailable."}) from None
     except Exception:
+        auth_logger.warning("Firebase authentication unavailable: reason=verification_service_unavailable")
         raise HTTPException(503, "Authentication service unavailable.") from None
     if (claims.get("aud") != FIREBASE_PROJECT
             or claims.get("iss") != f"https://securetoken.google.com/{FIREBASE_PROJECT}"):
         auth_logger.warning("Firebase authentication rejected: reason=project_claim_mismatch")
-        raise HTTPException(401, "Invalid or expired authentication.")
+        raise HTTPException(503, {"code": "auth_project_error", "message": "Authentication configuration unavailable."})
     uid = claims.get("uid")
     if not isinstance(uid, str) or not uid or "/" in uid:
         auth_logger.warning("Firebase authentication rejected: reason=invalid_uid")
         raise HTTPException(401, "Invalid or expired authentication.")
     if claims.get("email_verified") is not True:
+        auth_logger.warning("Firebase authorization rejected: reason=email_unverified")
         raise HTTPException(403, "Verified email required.")
     return Principal(uid)
 
@@ -224,6 +242,7 @@ def create_app(initialize_services=True):
     async def lifespan(application):
         firebase_app = None
         storage = None
+        notification_task = None
         if initialize_services:
             try:
                 settings = Settings.from_environment()
@@ -239,12 +258,21 @@ def create_app(initialize_services=True):
                 application.state.settings = settings
                 application.state.firebase_app = firebase_app
                 application.state.authorization = Authorization(FirestoreRecords(client))
+                application.state.admin_security = AdminSecurity(client)
                 application.state.manifests = FirestoreManifestRepository(client)
                 storage = SupabaseStorage(settings)
                 application.state.documents = DocumentService(
                     application.state.authorization, DocumentRepository(client),
                     storage, ClamAVScanner(),
                 )
+                application.state.screening = ScreeningService(application.state.authorization,
+                    application.state.documents, client)
+                application.state.shortlisting = ShortlistService(application.state.authorization, client)
+                transport = configured_transport()
+                application.state.notifications = NotificationDispatcher(client,
+                    lambda uid: auth.get_user(uid, app=firebase_app), transport)
+                if transport is not None:
+                    notification_task = asyncio.create_task(application.state.notifications.run())
             except Exception:
                 if firebase_app is not None:
                     firebase_admin.delete_app(firebase_app)
@@ -252,6 +280,10 @@ def create_app(initialize_services=True):
         try:
             yield
         finally:
+            if notification_task is not None:
+                notification_task.cancel()
+                try: await notification_task
+                except asyncio.CancelledError: pass
             if storage is not None:
                 storage.close()
             if firebase_app is not None:
@@ -266,15 +298,24 @@ def create_app(initialize_services=True):
     )
     application.state.upload_slots = threading.BoundedSemaphore(2)
 
+    @application.middleware("http")
+    async def private_auth_responses(request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith(("/api/auth/", "/api/admin/")):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     @application.exception_handler(Exception)
     async def service_failure(request, exception):
-        return JSONResponse(status_code=503, content={"detail": "Document service unavailable."})
+        message = ("Screening service unavailable." if request.url.path.endswith("/screening") else
+                   "Authentication service unavailable." if request.url.path.startswith(("/api/auth/", "/api/admin/")) else "Document service unavailable.")
+        return JSONResponse(status_code=503, content={"detail": message}, headers={"Cache-Control": "no-store"})
 
     @application.exception_handler(HTTPException)
     async def rejected_request(request, exception):
         actor = getattr(request.state, "principal", None)
         service = getattr(request.app.state, "documents", None)
-        if actor and service and exception.status_code in (403, 413, 422):
+        if actor and service and exception.status_code in (403, 413, 422) and request.url.path.startswith(("/api/me/document-sets", "/api/applications/")):
             try:
                 await run_in_threadpool(service.repository.audit, {
                     "actorUid": actor.uid, "action": "DOCUMENT_REQUEST_REJECTED",
@@ -293,6 +334,94 @@ def create_app(initialize_services=True):
 
     actor_dependency = Annotated[Principal, Depends(current_principal)]
     service_dependency = Annotated[DocumentService, Depends(documents)]
+
+    def administrator_security(request: Request):
+        service = getattr(request.app.state, "admin_security", None)
+        if service is None:
+            raise HTTPException(503, "Authentication service unavailable.")
+        return service
+
+    def screening(request: Request):
+        service = getattr(request.app.state, "screening", None)
+        if service is None:
+            raise HTTPException(503, "Screening service unavailable.")
+        return service
+
+    def shortlisting(request: Request):
+        service = getattr(request.app.state, 'shortlisting', None)
+        if service is None:
+            raise HTTPException(503, 'Shortlist service unavailable.')
+        return service
+
+    @application.get('/api/admin/applications/{application_id}/shortlist')
+    def shortlist_status(application_id: str, actor: actor_dependency,
+                         service: Annotated[ShortlistService, Depends(shortlisting)]):
+        return service.get(actor, application_id)
+
+    @application.post('/api/admin/applications/{application_id}/shortlist')
+    async def change_shortlist(application_id: str, request: Request, actor: actor_dependency,
+                               service: Annotated[ShortlistService, Depends(shortlisting)]):
+        try:
+            body = json.loads(await bounded_body(request, 8192))
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(422, 'Supply a valid shortlist request.') from None
+        return await run_in_threadpool(service.change, actor, application_id, body)
+
+    @application.get('/api/admin/vacancies/{vacancy_id}/shortlist')
+    def vacancy_shortlist(vacancy_id: str, actor: actor_dependency,
+                          service: Annotated[ShortlistService, Depends(shortlisting)]):
+        return service.list_vacancy(actor, vacancy_id)
+
+    @application.get("/api/admin/applications/{application_id}/profile")
+    def applicant_review_profile(application_id: str, actor: actor_dependency, service: service_dependency):
+        authorization = service.authorization
+        record = authorization.records.read('applications', valid_identifier(application_id))
+        if not record:
+            raise HTTPException(404, 'Application not found.')
+        grant = authorization.administrator(actor, record.get('region'))
+        owner = valid_identifier(record.get('applicantId'))
+        profile = authorization.records.read('users', owner)
+        if not profile or profile.get('role') != 'applicant':
+            raise HTTPException(404, 'Applicant profile is unavailable.')
+        # Recheck profile region too: an application must not expose a profile
+        # belonging to another administrative region through a stale reference.
+        authorization.administrator(actor, profile.get('region'))
+        fields = ('firstName', 'lastName', 'email', 'phone', 'address', 'region',
+                  'dateOfBirth', 'gender', 'highestQualification', 'employmentStatus')
+        safe = {key: profile[key] for key in fields if isinstance(profile.get(key), str)}
+        safe['skills'] = [item for item in profile.get('skills', []) if isinstance(item, str)][:100] \
+            if isinstance(profile.get('skills'), list) else []
+        # Never infer school points from a qualification name or AI match marker.
+        points = profile.get('academicPoints')
+        safe['academicPoints'] = points if type(points) is int and points >= 0 else None
+        service.repository.audit(service.repository.event(actor, 'APPLICANT_PROFILE_VIEWED', record.get('region'),
+            applicationId=application_id, applicantId=owner, actorRole=grant['role']))
+        return {'result': safe}
+
+    @application.get("/api/admin/applications/{application_id}/screening")
+    def screening_result(application_id: str, actor: actor_dependency,
+                         service: Annotated[ScreeningService, Depends(screening)]):
+        return service.get(actor, application_id)
+
+    @application.post("/api/admin/applications/{application_id}/screening")
+    async def run_screening(application_id: str, request: Request, actor: actor_dependency,
+                            service: Annotated[ScreeningService, Depends(screening)]):
+        # All sources come from stored application/vacancy/manifest records.
+        # Caller-supplied text, outcomes, roles and synthetic scenarios are rejected.
+        if await bounded_body(request, 1024):
+            raise HTTPException(422, "Screening takes no request body.")
+        return await run_in_threadpool(service.run, actor, application_id)
+
+    @application.get("/api/auth/bootstrap")
+    def auth_bootstrap(actor: actor_dependency):
+        # This verified-email endpoint returns no applicant data or administrator grant.
+        return {"uid": actor.uid}
+
+    @application.get("/api/admin/session")
+    def admin_session(actor: actor_dependency, service: Annotated[AdminSecurity, Depends(administrator_security)]):
+        return {"admin": service.session(actor.uid)}
 
     @application.post("/api/me/document-sets", status_code=201)
     async def upload_documents(request: Request, actor: actor_dependency, service: service_dependency):
@@ -371,12 +500,19 @@ def create_app(initialize_services=True):
     @application.get("/api/applications/{application_id}/documents")
     def application_manifest(application_id: str, actor: actor_dependency, service: service_dependency):
         record = service.authorization.application_documents(actor, application_id)
-        return safe_manifest(service.repository.bound(application_id, record["applicantId"]))
+        return safe_manifest(service.repository.ensure_binding(actor, application_id))
+
+    @application.get("/api/admin/applications/{application_id}/notification")
+    def notification_status(application_id: str, request: Request, actor: actor_dependency, service: service_dependency):
+        valid_identifier(application_id)
+        notifications = getattr(request.app.state, 'notifications', None)
+        if notifications is None: raise HTTPException(503, 'Notification status unavailable.')
+        return {'result': notifications.status(actor, application_id, service.authorization)}
 
     @application.get("/api/applications/{application_id}/documents/{kind}/download")
     def application_download(application_id: str, kind: str, actor: actor_dependency, service: service_dependency):
         record = service.authorization.application_documents(actor, application_id)
-        manifest = service.repository.bound(application_id, record["applicantId"])
+        manifest = service.repository.ensure_binding(actor, application_id)
         return attachment(service, actor, manifest, kind, record.get("region", ""), application_id)
 
     @application.get("/health")

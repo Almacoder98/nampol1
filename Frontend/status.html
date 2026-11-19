@@ -198,6 +198,7 @@
             }
         }
     </style>
+<script type="module" src="../js/session-guard.js"></script>
 </head>
 
 <body>
@@ -392,6 +393,7 @@
                 </div>
 
 
+                <p id="applicantShortlistStatus" class="mt-2" role="status"></p>
                 <!-- APPLICATION INFORMATION -->
 
                 <div class="application-info">
@@ -576,6 +578,10 @@
 
 
 <script type="module">
+import { watchApplicantApplications, applicantShortlistLabel } from "../js/application-status.js";
+let stopApplicantUpdates = () => {};
+window.addEventListener("pagehide", () => stopApplicantUpdates());
+
 
 import {
     auth,
@@ -724,10 +730,8 @@ function normaliseStatus(status) {
     }
 
 
-    if (
-        value === "approved" ||
-        value === "shortlisted"
-    ) {
+    if (value === "shortlisted") return "Shortlisted";
+    if (value === "approved") {
         return "Approved";
     }
 
@@ -756,7 +760,7 @@ function getStatusClass(status) {
     }
 
 
-    if (value === "Under Review") {
+    if (value === "Under Review" || value === "Shortlisted") {
         return "status-review";
     }
 
@@ -857,6 +861,7 @@ function renderTimeline(application) {
 
     if (
         status === "Under Review" ||
+        status === "Shortlisted" ||
         status === "Approved" ||
         status === "Denied"
     ) {
@@ -872,7 +877,7 @@ function renderTimeline(application) {
         createTimelineItem(
             "Application Under Review",
             reviewDate,
-            status === "Under Review"
+            (status === "Under Review" || status === "Shortlisted")
                 ? "current"
                 : "completed"
         );
@@ -1029,6 +1034,7 @@ function renderApplication(application) {
         );
 
 
+    document.getElementById("applicantShortlistStatus").textContent = applicantShortlistLabel(application);
     statusElement.textContent =
         status.toUpperCase();
 
@@ -1254,6 +1260,8 @@ onAuthStateChanged(
     auth,
     async user => {
 
+        stopApplicantUpdates();
+
         if (!user) {
 
             window.location.href =
@@ -1339,6 +1347,21 @@ onAuthStateChanged(
             );
 
 
+            stopApplicantUpdates = await watchApplicantApplications(user, applications => {
+                const selected = applicationSelector.value;
+                userApplications = applications;
+                if (!applications.length) {
+                    statusCard.classList.add("d-none");
+                    applicationSelectorContainer.classList.add("d-none");
+                    noApplication.classList.remove("d-none");
+                    return;
+                }
+                noApplication.classList.add("d-none");
+                populateApplicationSelector(applications);
+                const current = applications.find(app => (app.applicationReference || app.id) === selected);
+                if (current) { applicationSelector.value = selected; renderApplication(current); }
+                else selectInitialApplication();
+            }, message => { alertBox.textContent = message; alertBox.classList.remove("d-none"); });
             if (
                 userApplications.length === 0
             ) {
@@ -1357,6 +1380,8 @@ onAuthStateChanged(
 
 
             selectInitialApplication();
+
+
 
 
         } catch (error) {

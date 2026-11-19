@@ -70,7 +70,13 @@ async function apiRequest(user, method, body) {
     try {
         // Force refresh before sending files; revoked/disabled sessions fail closed.
         token = await user.getIdToken(true);
-    } catch {
+    } catch (error) {
+        if (error.code === "auth/network-request-failed") {
+            throw new Error("Cannot refresh authentication while offline. Check your connection and reload.");
+        }
+        if (error.code === "auth/too-many-requests") {
+            throw new Error("Authentication is temporarily busy. Wait and reload.");
+        }
         throw new Error("Your session could not be refreshed. Please log in again.");
     }
     if (auth.currentUser !== user || currentUser !== user) {
@@ -79,6 +85,8 @@ async function apiRequest(user, method, body) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 120000);
     let response;
+    let authenticationRejected = false;
+    let storageFailureMessage = "";
     try {
         response = await fetch(`${API_ORIGIN}/api/me/document-sets`, {
             method, headers: { Authorization: `Bearer ${token}` },
@@ -86,8 +94,37 @@ async function apiRequest(user, method, body) {
             credentials: "omit", cache: "no-store", redirect: "error"
         });
         if (!response.ok) {
+            // These codes are returned before authorization/body processing. A login
+            // cannot repair them; no upload has started and no POST is retried.
+            let code;
+            if ([401, 503].includes(response.status)) {
+                try { code = (await response.json()).detail?.code; } catch { /* generic HTTP error */ }
+            }
+            const authenticationMessages = {
+                auth_clock_error: "The backend clock is behind Firebase. Ask the operator to synchronize server time, then reload. No upload was started.",
+                auth_project_error: "The backend Firebase project configuration does not match this sign-in. Contact the operator. No upload was started.",
+                auth_backend_error: "The backend cannot access Firebase Authentication. Ask the operator to check server credentials and permissions. No upload was started."
+            };
+            if (response.status === 503 && Object.hasOwn(authenticationMessages, code)) {
+                authenticationRejected = true;
+                throw new Error(authenticationMessages[code]);
+            }
+            const storageMessages = {
+                storage_credentials_error: "Supabase rejected the backend credentials. The operator must check the matching project URL and active server secret key.",
+                storage_connection_error: "The backend cannot connect to the configured Supabase project. The operator must check the project URL, DNS and network.",
+                storage_bucket_missing: "The required private document bucket was not found in the configured Supabase project.",
+                storage_bucket_not_private: "The configured document bucket is not private. Uploads are blocked.",
+                storage_request_error: "Supabase rejected the backend storage request. The operator must inspect the storage integration.",
+                storage_timeout: "The Supabase storage request timed out.",
+                storage_service_error: "The private storage service is unavailable."
+            };
+            if (response.status === 503 && Object.hasOwn(storageMessages, code)) {
+                storageFailureMessage = storageMessages[code];
+                throw new Error(storageFailureMessage);
+            }
             const messages = {
-                401: "Your session has expired. Please log in again.",
+                401: code === "session_expired" ? "Your session has expired. Please log in again."
+                    : "Authentication was rejected. Please log in again; if it persists, contact the operator.",
                 403: "Upload access denied. Check your verified email and applicant profile.",
                 408: "The upload request timed out. Check saved sets before trying again.",
                 413: "Files rejected: each PDF must be no larger than 5 MiB.",
@@ -103,9 +140,10 @@ async function apiRequest(user, method, body) {
         return result;
     } catch (error) {
         // A dropped response may follow a committed upload. Never automatically POST again.
-        if (method === "POST" && (!response || response.ok || response.status >= 500)) {
+        if (method === "POST" && !authenticationRejected && (!response || response.ok || response.status >= 500)) {
             uncertainOutcome = true;
-            throw new Error("Upload outcome could not be confirmed. Reload this page to check saved document sets before uploading again.");
+            throw new Error((storageFailureMessage ? storageFailureMessage + " " : "Upload outcome could not be confirmed. ")
+                + "Reload this page to check saved document sets before uploading again.");
         }
         if (!response) {
             throw new Error("Cannot reach the document service. Check that the backend is running and reload this page.");

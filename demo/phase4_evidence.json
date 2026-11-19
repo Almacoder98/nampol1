@@ -1,0 +1,113 @@
+{
+  "recorded_at_utc": "2026-10-24T19:54:56.090152+00:00",
+  "phase": 4,
+  "scope": "LOCAL_COMPOSITION_AND_EMULATOR; NOT_LIVE_PROVIDER_OR_BROWSER_E2E",
+  "smtp_delivery": "PENDING",
+  "real_emails_sent": false,
+  "live_accounts_created": false,
+  "genuine_records_changed": false,
+  "deployed": false,
+  "billing_changed": false,
+  "pushed": false,
+  "python": {
+    "exit_code": 0,
+    "log": ".nampol/phase4-python-results.log",
+    "collected": 139,
+    "skipped": 6,
+    "failed": 0,
+    "passed": 133
+  },
+  "javascript": {
+    "exit_code": 0,
+    "log": ".nampol/phase4-javascript-results.log",
+    "passed": 86,
+    "failed": 0,
+    "skipped": 0
+  },
+  "firestore_emulator": {
+    "exit_code": 0,
+    "log": ".nampol/phase4-firestore_emulator-results.log",
+    "passed": 21,
+    "failed": 0,
+    "skipped": 0
+  },
+  "launcher": {
+    "exit_code": 0,
+    "log": ".nampol/phase4-launcher-results.log",
+    "offline_check_groups_passed": 9,
+    "full_restart": "SKIPPED - preserve existing processes"
+  },
+  "total": {
+    "passed": 240,
+    "failed": 0,
+    "skipped": 6,
+    "launcher_groups_counted_separately": true
+  },
+  "firestore_rules": {
+    "sha256": "22a98a30c990b9229cf682fb6bdd0ab0a5b984420bd876df9128e4031c51dbbb",
+    "changed_during_this_refresh": false,
+    "matches_latest_admin_review_tested_version": true,
+    "matches_phase3_tested_version": false,
+    "difference_from_phase3": "Previously implemented optional owner-only academicPoints field; no new rule edit in this refresh.",
+    "live_deployment_checked": false
+  },
+  "protected_configuration_changed_during_suite": false,
+  "runtime": {
+    "recorded_at_utc": "2026-10-24T19:50:29.974107+00:00",
+    "scope": "READ_ONLY_LOOPBACK_PUBLIC_ASSETS_AND_HEALTH_ONLY",
+    "frontend": [
+      {
+        "route": "/Frontend/admin.html",
+        "http_status": 200,
+        "matches_local_source": false
+      },
+      {
+        "route": "/Frontend/profile.html",
+        "http_status": 200,
+        "matches_local_source": false
+      },
+      {
+        "route": "/js/review-profile.js",
+        "http_status": 404,
+        "matches_local_source": false
+      },
+      {
+        "route": "/js/firestore.js",
+        "http_status": 200,
+        "matches_local_source": false
+      }
+    ],
+    "backend_health": {
+      "http_status": 200,
+      "body": {
+        "status": "ok",
+        "phase": "2A"
+      }
+    },
+    "authenticated_workflows_tested": false,
+    "processes_restarted": false
+  },
+  "refresh_changes": [
+    "PHASE4_DEMONSTRATION.md",
+    "demo/phase4_evidence.json",
+    ".nampol/phase4-* local evidence/logs"
+  ],
+  "demonstration": {
+    "account_definitions": 5,
+    "live_accounts_created": 0,
+    "individual_synthetic_pdfs": 6,
+    "combined_review_pdf_pages": 6,
+    "sample_manifest": "output/pdf/phase4-demo/manifest.json",
+    "guide": "PHASE4_DEMONSTRATION.md",
+    "research_checklist": "PHASE4_DEMONSTRATION.md",
+    "live_browser_e2e": "NOT TESTED",
+    "real_clamav_supabase_e2e": "NOT TESTED",
+    "smtp_delivery": "PENDING"
+  },
+  "next_actions": [
+    "Owner-approved HTTPS domain configuration; no billing changes without separate approval.",
+    "Approve scoped dedicated test identities/data, owned inboxes and private IT administrator provisioning.",
+    "Approve coordinated compatible frontend/backend/rules migration and hosted API routing; restart existing local servers when ready.",
+    "Run controlled live synthetic demonstration, keep SMTP preview, disable test identities afterward and retain sanitized evidence."
+  ]
+}
